@@ -5,7 +5,7 @@ import java.util.Vector;
 public class SearchPageObject implements Comparable<SearchPageObject>
 {
 	private String pid;
-	private java.sql.Date createDate;
+	private Date createDate;
 	private String title;
 	private String content;
 	private String creator;
@@ -23,7 +23,7 @@ public class SearchPageObject implements Comparable<SearchPageObject>
 	 *
 	 * jnguyen1 20100307
 	 */
-	public SearchPageObject(String pid, java.sql.Date createDate, String title,
+	public SearchPageObject(String pid, Date createDate, String title,
 			String content, String creator)
 	{
 		this.pid = pid;
@@ -31,6 +31,48 @@ public class SearchPageObject implements Comparable<SearchPageObject>
 		this.title = title;
 		this.content = content;
 		this.creator = creator;
+	}
+
+	public String getPid()
+	{
+		return this.pid;
+	}
+
+	public Date getCreateDate()
+	{
+		return this.createDate;
+	}
+
+	public String getTitle()
+	{
+		return this.title;
+	}
+
+	public String getContent()
+	{
+		return this.content;
+	}
+
+	public String getCreator()
+	{
+		return this.creator;
+	}
+
+	/**
+	 * Function:
+	 * Getter for ranking member variable.
+	 *
+	 * Param:
+	 * None.
+	 *
+	 * Return:
+	 * The integer value of the ranking.
+	 *
+	 * jnguyen1 20100307
+	 */
+	public int getRanking()
+	{
+		return this.ranking;
 	}
 
 	/**
@@ -75,23 +117,6 @@ public class SearchPageObject implements Comparable<SearchPageObject>
 		}
 
 		this.ranking = rankingTally;
-	}
-
-	/**
-	 * Function:
-	 * Getter for ranking member variable.
-	 *
-	 * Param:
-	 * None.
-	 *
-	 * Return:
-	 * The integer value of the ranking.
-	 *
-	 * jnguyen1 20100307
-	 */
-	public int getRanking()
-	{
-		return this.ranking;
 	}
 
 	/**
