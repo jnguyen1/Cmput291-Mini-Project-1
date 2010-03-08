@@ -80,9 +80,12 @@ public class Main
 		} 
 
 		Collections.sort(results);
-		/*
-		 * Do somethign with the sorted result. Probably print it to user in sorted order.
-		 */
+
+		for (int i=0; i<results.size(); i++)
+		{
+			SearchPageObject spo = results.get(i);
+			System.out.format("%20s %20s %20s\n", spo.getTitle(), spo.getContent(), spo.getCreator());
+		}
 
 		stmt.close(); 
 	}
