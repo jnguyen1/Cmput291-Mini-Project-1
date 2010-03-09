@@ -13,6 +13,8 @@ public class UserPage {
 	static String createString;
 		
 	public UserPage(String email){
+		// TODO:
+		// createString shoudl probably be email.
 		createString = "select name from users where email = '"+createString+"';";
 		try
 		{
