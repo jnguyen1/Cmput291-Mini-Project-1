@@ -141,12 +141,13 @@ public class Main {
 		name = Keyboard.in.readString();
 		System.out.print("City: ");
 		city = Keyboard.in.readString();
-		System.out.print("Gender (M or F): ");
-		gender = Keyboard.in.readString().toCharArray();
-		while(!((gender.length == 1) && ((gender[0] != 'M') || (gender[0] != 'F') || (gender[0] != 'm') || (gender[0] != 'f')))){
+
+		do
+		{
 			System.out.print("Please enter either M or F for gender: ");
-			gender = Keyboard.in.readString().toCharArray();
-		}
+			gender = Keyboard.in.readString().toLowerCase().toCharArray();
+		} while( !(gender.length == 1 && (gender[0] == 'm' || gender[0] == 'f')));
+
 		System.out.print("Finally, enter your password: ");
 		pass = Keyboard.in.readString();
 		System.out.print("Confirm your password: ");
@@ -160,8 +161,6 @@ public class Main {
 		System.out.println("Thank you. Entering information into database... Please wait a moment.");
 		
 		createString = "insert into users values ('"+email+"','"+name+"','"+city+"','"+gender[0]+"','"+pass+"')";
-		
-		System.out.println(createString);//debugging purposes
 		
 		try{
 			m_con = DriverManager.getConnection(m_url, m_userName, m_password);
