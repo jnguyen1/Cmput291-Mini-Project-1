@@ -12,9 +12,7 @@ public class UserPage {
 	static String user;
 	static String createString;
 		
-	public UserPage(String email){
-		// TODO:
-		// createString shoudl probably be email.
+	public UserPage(){
 		createString = "select name from users where email = '"+createString+"';";
 		try
 		{
