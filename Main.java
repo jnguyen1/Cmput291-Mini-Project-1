@@ -1,4 +1,6 @@
 import java.sql.*;
+import java.util.Vector;
+import java.util.Collections;
 
 public class Main {
 
@@ -184,6 +186,136 @@ public class Main {
 		System.out.println("Congrats! You have created your account. You will now be directed to the login screen.");
 		Keyboard p = new Keyboard();
 		p.pause();
+	}
+
+	/*
+	 * Function:
+	 * Searches through pages table for records whose title or content contains the supplied keywords.
+	 * Display the results in a sorted order that places greater weighting on matches on title (T*2+C).
+	 *
+	 * Param:
+	 * conn - the connection to the database.
+	 * keywords - a vector of 1 or more keywords to match on.
+	 *
+	 * Return:
+	 * None.
+	 *
+	 * jnguyen1 20100307
+	 */
+	private void searchPages(Connection conn, Vector<String> keywords) throws SQLException
+	{
+		Vector<SearchPageObject> results = new Vector<SearchPageObject>();
+
+		String condition = "title like '" + keywords.get(0) + "' or content like '" + keywords.get(0) + "'";
+		for (int i=1; i<keywords.size(); i++)
+		{
+			condition.concat(" or title like '" + keywords.get(i) + "' or content like '" + keywords.get(i) + "'");
+		}
+
+		Statement stmt = conn.createStatement(); 
+		ResultSet rset = stmt.executeQuery("select * from pages where " + condition + ";"); 
+
+		while(rset.next())
+		{ 
+			SearchPageObject spo = new SearchPageObject(
+				rset.getString("pid"),
+				rset.getDate("cdate"),
+				rset.getString("title"),
+				rset.getString("content"),
+				rset.getString("creator")
+				);
+			spo.calculateRanking(keywords);
+
+			results.add(spo);
+		} 
+
+		Collections.sort(results);
+
+		for (int i=0; i<results.size(); i++)
+		{
+			SearchPageObject spo = results.get(i);
+			System.out.format("#%d %20s %20s %20s\n", i, spo.getTitle(), spo.getContent(), spo.getCreator());
+		}
+
+		System.out.println("1. Become a fan of a page.");
+		System.out.println("2. Return.");
+		boolean menuLoop = true;
+		while (menuLoop)
+		{
+			int menuChoice = Keyboard.in.readInteger();
+
+			switch (menuChoice)
+			{
+				case 0:
+					fanPageRequest(stmt, results);
+					menuLoop = false;
+					break;
+				case 1:
+					menuLoop = false;
+					break;
+				default:
+					break;
+			}
+		}
+
+		stmt.close(); 
+	}
+
+	/**
+	 * Function:
+	 * Request the fan page information from user and register them as a fan.
+	 *
+	 * Param:
+	 * stmt - the Statement object to execute statements on.
+	 * results - list of SearchPageObject which are sorted in ranking. Users will choose a from the sorted list.
+	 *
+	 * Return:
+	 * None.
+	 */
+	private void fanPageRequest(Statement stmt, Vector<SearchPageObject> results)
+	{
+		while (true)
+		{
+			System.out.println("Select a page number to become a fan. -1 to cancel.");
+			int choice = Keyboard.in.readInteger();
+			if (choice == -1)
+			{
+				return;
+			}
+			else if (choice < 0 || choice > results.size())
+			{
+				System.out.println("Wrong choice. Pick again");
+			}
+			else
+			{
+				try
+				{
+					registerFan(stmt, results.get(choice).getPid());
+				}
+				catch (SQLException e)
+				{
+					System.out.println("Could not register as fan of page.");
+				}
+
+				return;
+			}
+		}
+	}
+
+	/**
+	 * Function:
+	 * Register the user as a fan of the page.
+	 *
+	 * Param:
+	 * stmt - Statement object used to execute sql statements.
+	 * pid - the id of the page.
+	 *
+	 * Return:
+	 * None.
+	 */
+	private void registerFan(Statement stmt, String pid) throws SQLException
+	{
+		stmt.executeUpdate("insert into fans values('" + Main.user + "', '" + pid + "', current_date)");
 	}
 
 }
