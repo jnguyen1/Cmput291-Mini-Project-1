@@ -148,7 +148,7 @@ public class UserPage {
 			{
 				try
 				{
-					registerFan(stmt, results.get(choice).getPid());
+					stmt.executeUpdate("insert into fans values('" + Main.user + "', '" + results.get(choice)  + "', current_date)");
 				}
 				catch (SQLException e)
 				{
@@ -158,22 +158,6 @@ public class UserPage {
 				return;
 			}
 		}
-	}
-
-	/**
-	 * Function:
-	 * Register the user as a fan of the page.
-	 *
-	 * Param:
-	 * stmt - Statement object used to execute sql statements.
-	 * pid - the id of the page.
-	 *
-	 * Return:
-	 * None.
-	 */
-	private void registerFan(Statement stmt, String pid) throws SQLException
-	{
-		stmt.executeUpdate("insert into fans values('" + Main.user + "', '" + pid + "', current_date)");
 	}
 
 	/**
