@@ -246,15 +246,16 @@ public class UserPage {
 					);
 		} 
 
+		rset.last();
 		if (rset.getRow() == 0)
 		{
 			System.out.println("No users that matched keyword search.");
 			return;
 		}
 
-		System.out.println("Select user number to request additional stats. -1 to cancel.");
 		while (true)
 		{
+			System.out.println("Select user number to request additional stats. -1 to cancel.");
 			int menuChoice = Keyboard.in.readInteger();
 			if (menuChoice == -1)
 			{
@@ -267,13 +268,16 @@ public class UserPage {
 				{
 					try
 					{
-					this.requestUserStat(stmt, rset.getString("email"));
+						this.requestUserStat(stmt, rset.getString("email"));
 					}
 					catch (SQLException e)
 					{
 						System.out.println("Could not request user stats.");
 					}
 				}
+
+				// We are not looping. But infrastructure is here.
+				break;
 			}
 		}
 	}
@@ -293,20 +297,24 @@ public class UserPage {
 	 */
 	private void requestUserStat(Statement stmt, String email) throws SQLException
 	{
-		ResultSet friendsRset = stmt.executeQuery("select count(*) from friends where email = '" + email + "'");
-		ResultSet statusRset = stmt.executeQuery("select count(*) from status where email = '" + email + "'");
-		ResultSet commentsRset = stmt.executeQuery("select count(*) from comments where email = '" + email + "'");
-		ResultSet messagesRset = stmt.executeQuery("select count(*) from messages where sender = '" + email + "'");
+		ResultSet rset = null;
+		String friendCount, statusCount, commentCount, messageCount;
 
-		friendsRset.first();
-		statusRset.first();
-		commentsRset.first();
-		messagesRset.first();
+		rset = stmt.executeQuery("select count(*) from friends where email = '" + email + "'");
+		rset.first();
+		friendCount = rset.getString(1);
 
-		String friendCount = friendsRset.getString(1);
-		String statusCount = statusRset.getString(1);
-		String commentCount = commentsRset.getString(1);
-		String messageCount = messagesRset.getString(1);
+		rset = stmt.executeQuery("select count(*) from status where email = '" + email + "'");
+		rset.first();
+		statusCount = rset.getString(1);
+
+		rset = stmt.executeQuery("select count(*) from comments where email = '" + email + "'");
+		rset.first();
+		commentCount = rset.getString(1);
+
+		rset = stmt.executeQuery("select count(*) from messages where sender = '" + email + "'");
+		rset.first();
+		messageCount = rset.getString(1);
 
 		System.out.println("The user '" + email + "' has the following stats.");
 		System.out.println(friendCount + " number of friends.");
