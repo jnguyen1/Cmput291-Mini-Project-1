@@ -52,16 +52,22 @@ public class UserPage {
 	 * Display the results in a sorted order that places greater weighting on matches on title (T*2+C).
 	 *
 	 * Param:
-	 * conn - the connection to the database.
-	 * keywords - a vector of 1 or more keywords to match on.
+	 * stmt - the Statement object to execute statements on.
 	 *
 	 * Return:
 	 * None.
 	 *
 	 * jnguyen1 20100307
 	 */
-	private void searchPages(Connection conn, Vector<String> keywords) throws SQLException
+	private void searchPages(Statement stmt) throws SQLException
 	{
+		Vector<String> keywords = this.getSearchPagesKeywords();
+		if (keywords.size() == 0)
+		{
+			System.out.println("No word to search.");
+			return;
+		}
+
 		Vector<SearchPageObject> results = new Vector<SearchPageObject>();
 
 		String condition = "title like '" + keywords.get(0) + "' or content like '" + keywords.get(0) + "'";
@@ -70,7 +76,6 @@ public class UserPage {
 			condition.concat(" or title like '" + keywords.get(i) + "' or content like '" + keywords.get(i) + "'");
 		}
 
-		Statement stmt = conn.createStatement(); 
 		ResultSet rset = stmt.executeQuery("select * from pages where " + condition + ";"); 
 
 		while(rset.next())
@@ -117,6 +122,28 @@ public class UserPage {
 		}
 
 		stmt.close(); 
+	}
+
+	private Vector<String> getSearchPagesKeywords()
+	{
+		Vector<String> keywords = new Vector<String>();
+		String word;
+
+		System.out.println("Enter keywords to search title and content for. Newline to finish list.");
+		while (true)
+		{
+			word = Keyboard.in.readString();
+			if (word.length() == 0)
+			{
+				break;
+			}
+			else
+			{
+				keywords.add(word);
+			}
+		}
+
+		return keywords;
 	}
 
 	/**
