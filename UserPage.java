@@ -73,10 +73,10 @@ public class UserPage {
 
 		Vector<SearchPageObject> results = new Vector<SearchPageObject>();
 
-		String condition = "title like '" + keywords.get(0) + "' or content like '" + keywords.get(0) + "'";
+		String condition = "title like '%" + keywords.get(0) + "%' or content like '%" + keywords.get(0) + "%'";
 		for (int i=1; i<keywords.size(); i++)
 		{
-			condition.concat(" or title like '" + keywords.get(i) + "' or content like '" + keywords.get(i) + "'");
+			condition.concat(" or title like '%" + keywords.get(i) + "%' or content like '%" + keywords.get(i) + "%'");
 		}
 
 		ResultSet rset = stmt.executeQuery("select * from pages where " + condition); 
@@ -224,10 +224,10 @@ public class UserPage {
 			return;
 		}
 
-		String condition = "name like '" + keywords.get(0) + "' or email like '" + keywords.get(0) + "'";
+		String condition = "name like '%" + keywords.get(0) + "%' or email like '%" + keywords.get(0) + "%'";
 		for (int i=1; i<keywords.size(); i++)
 		{
-			condition.concat(" or name like '" + keywords.get(i) + "' or email like '" + keywords.get(i) + "'");
+			condition.concat(" or name like '%" + keywords.get(i) + "%' or email like '%" + keywords.get(i) + "%'");
 		}
 
 		ResultSet rset = stmt.executeQuery("select email, name, city, gender from users where " + condition); 
