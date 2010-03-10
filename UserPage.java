@@ -57,6 +57,9 @@ public class UserPage {
 	 * Return:
 	 * None.
 	 *
+	 * Exceptions:
+	 * SQLException caused by executeQuery.
+	 *
 	 * jnguyen1 20100307
 	 */
 	private void searchPages(Statement stmt) throws SQLException
@@ -194,6 +197,111 @@ public class UserPage {
 				return;
 			}
 		}
+	}
+
+	/*
+	 * Function:
+	 * Searches through pages table for records whose title or content contains the supplied keywords.
+	 * Display the results in a sorted order that places greater weighting on matches on title (T*2+C).
+	 *
+	 * Param:
+	 * stmt - the Statement object to execute statements on.
+	 *
+	 * Return:
+	 * None.
+	 *
+	 * Exceptions:
+	 * SQLException caused by executeQuery.
+	 *
+	 * jnguyen1 20100307
+	 */
+	private void searchUsers(Statement stmt) throws SQLException
+	{
+		Vector<String> keywords = this.getKeywords();
+		if (keywords.size() == 0)
+		{
+			System.out.println("No word to search.");
+			return;
+		}
+
+		String condition = "name like '" + keywords.get(0) + "' or email like '" + keywords.get(0) + "'";
+		for (int i=1; i<keywords.size(); i++)
+		{
+			condition.concat(" or name like '" + keywords.get(i) + "' or email like '" + keywords.get(i) + "'");
+		}
+
+		ResultSet rset = stmt.executeQuery("select email, name, city, gender from users where " + condition + ";"); 
+
+		while(rset.next())
+		{ 
+			System.out.format("%d %20s %20s %20s", rset.getRow(), rset.getString("email"),
+					rset.getString("name"),
+					rset.getString("city"),
+					rset.getString("gender")
+					);
+		} 
+
+		System.out.println("Select user number to request additional stats. -1 to cancel.");
+		while (true)
+		{
+			int menuChoice = Keyboard.in.readInteger();
+			if (menuChoice == -1)
+			{
+				break;
+			}
+			else
+			{
+				// Request user stat if we can move to selected entry from rset.
+				if(rset.absolute(menuChoice))
+				{
+					try
+					{
+					this.requestUserStat(stmt, rset.getString("email"));
+					}
+					catch (SQLException e)
+					{
+						System.out.println("Could not request user stats.");
+					}
+				}
+			}
+		}
+	}
+
+	/**
+	 * Function:
+	 * Gather and print additional stats related to user.
+	 *
+	 * Param:
+	 * stmt - the Statement object to execute statements on.
+	 * email - the user to get the stats of.
+	 *
+	 * Return:
+	 * None.
+	 *
+	 * jnguyen1 20100309
+	 */
+	private void requestUserStat(Statement stmt, String email) throws SQLException
+	{
+		ResultSet friendsRset = stmt.executeQuery("select count(*) from friends where email = '" + email + "'");
+		ResultSet statusRset = stmt.executeQuery("select count(*) from status where email = '" + email + "'");
+		ResultSet commentsRset = stmt.executeQuery("select count(*) from comments where email = '" + email + "'");
+		ResultSet messagesRset = stmt.executeQuery("select count(*) from messages where sender = '" + email + "'");
+
+		friendsRset.first();
+		statusRset.first();
+		commentsRset.first();
+		messagesRset.first();
+
+		String friendCount = friendsRset.getString(1);
+		String statusCount = statusRset.getString(1);
+		String commentCount = commentsRset.getString(1);
+		String messageCount = messagesRset.getString(1);
+
+		System.out.println("The user '" + email + "' has the following stats.");
+		System.out.println(friendCount + " number of friends.");
+		System.out.println(statusCount + " number of status postings.");
+		System.out.println(commentCount + " number of comments made.");
+		System.out.println(messageCount + " number of messages sent.");
 	}
 
 	/**
