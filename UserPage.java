@@ -120,8 +120,6 @@ public class UserPage {
 					break;
 			}
 		}
-
-		stmt.close(); 
 	}
 
 	private Vector<String> getSearchPagesKeywords()
