@@ -79,7 +79,7 @@ public class UserPage {
 			condition.concat(" or title like '" + keywords.get(i) + "' or content like '" + keywords.get(i) + "'");
 		}
 
-		ResultSet rset = stmt.executeQuery("select * from pages where " + condition + ";"); 
+		ResultSet rset = stmt.executeQuery("select * from pages where " + condition); 
 
 		while(rset.next())
 		{ 
@@ -230,7 +230,7 @@ public class UserPage {
 			condition.concat(" or name like '" + keywords.get(i) + "' or email like '" + keywords.get(i) + "'");
 		}
 
-		ResultSet rset = stmt.executeQuery("select email, name, city, gender from users where " + condition + ";"); 
+		ResultSet rset = stmt.executeQuery("select email, name, city, gender from users where " + condition); 
 
 		while(rset.next())
 		{ 
