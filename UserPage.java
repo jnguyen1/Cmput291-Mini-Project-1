@@ -61,7 +61,7 @@ public class UserPage {
 	 */
 	private void searchPages(Statement stmt) throws SQLException
 	{
-		Vector<String> keywords = this.getSearchPagesKeywords();
+		Vector<String> keywords = this.getKeywords();
 		if (keywords.size() == 0)
 		{
 			System.out.println("No word to search.");
@@ -122,7 +122,18 @@ public class UserPage {
 		}
 	}
 
-	private Vector<String> getSearchPagesKeywords()
+	/**
+	 * Function:
+	 * Gets a list of keywords.
+	 *
+	 * Param:
+	 *
+	 * Return:
+	 * Vector of strings that are the desired keywords.
+	 *
+	 * jnguyen1 20100309
+	 */
+	private Vector<String> getKeywords()
 	{
 		Vector<String> keywords = new Vector<String>();
 		String word;
