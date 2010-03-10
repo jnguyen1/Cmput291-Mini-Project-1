@@ -217,29 +217,40 @@ public class UserPage {
 	 */
 	private void searchUsers(Statement stmt) throws SQLException
 	{
-		Vector<String> keywords = this.getKeywords();
+		// Only "a" keyword when searching for users.
+		//Vector<String> keywords = this.getKeywords();
+		Vector<String> keywords = new Vector<String>();
+		System.out.println("Enter the keyword to search users.");
+		keywords.add(Keyboard.in.readString());
+
 		if (keywords.size() == 0)
 		{
 			System.out.println("No word to search.");
 			return;
 		}
 
-		String condition = "name like '%" + keywords.get(0) + "%' or email like '%" + keywords.get(0) + "%'";
+		String condition = "lower(name) like '%" + keywords.get(0).toLowerCase() + "%' or lower(email) like '%" + keywords.get(0).toLowerCase() + "%'";
 		for (int i=1; i<keywords.size(); i++)
 		{
-			condition.concat(" or name like '%" + keywords.get(i) + "%' or email like '%" + keywords.get(i) + "%'");
+			condition.concat(" or lower(name) like '%" + keywords.get(i).toLowerCase() + "%' or lower(email) like '%" + keywords.get(i).toLowerCase() + "%'");
 		}
 
 		ResultSet rset = stmt.executeQuery("select email, name, city, gender from users where " + condition); 
 
 		while(rset.next())
 		{ 
-			System.out.format("%d %20s %20s %20s", rset.getRow(), rset.getString("email"),
+			System.out.format("%3d %20s %20s %20s\n", rset.getRow(), rset.getString("email"),
 					rset.getString("name"),
 					rset.getString("city"),
 					rset.getString("gender")
 					);
 		} 
+
+		if (rset.getRow() == 0)
+		{
+			System.out.println("No users that matched keyword search.");
+			return;
+		}
 
 		System.out.println("Select user number to request additional stats. -1 to cancel.");
 		while (true)
