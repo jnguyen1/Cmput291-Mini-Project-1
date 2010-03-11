@@ -1,4 +1,4 @@
 -conditional bug involving the registration page (limited to chars 'M', 'F', 'm', or "f')
 -String immutablilty has bitten me several times. 
 - char length constraints of tables not enforced in program.
-
+- one result set per statement. I had overlap of result sets and it clobbered the first.

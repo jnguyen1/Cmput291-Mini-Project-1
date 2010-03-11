@@ -459,17 +459,20 @@ public class UserPage {
 					System.out.println(ans[0]);
 				} while( !(ans.length == 1 && (ans[0] == 'y' || ans[0] == 'n' || ans[0] == 'i')));
 
+				// We still need rset for our loop. So we'll just pass a clone down.
+				Statement cloneStmt = rset.getConnection().createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
+
 				if (ans[0] == 'y')
 				{
-					this.addFriend(stmt, friend);
+					this.addFriend(cloneStmt, friend);
 				}
 				else if (ans[0] == 'n')
 				{
-					this.rejectFriend(stmt, friend);
+					this.rejectFriend(cloneStmt, friend);
 				}
 				else if (ans[0] == 'i')
 				{
-					this.ignoreRequest(stmt, friend);
+					this.ignoreRequest(cloneStmt, friend);
 				}
 			}
 		}
