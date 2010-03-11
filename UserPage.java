@@ -441,14 +441,14 @@ public class UserPage {
 	 */
 	private void checkFreqests(Statement stmt) throws SQLException
 	{
-		ResultSet rs = stmt.executeQuery("select f.* from users u,friend_requests f where u.email = '" + this.email + "' and u.email = f.femail");
+		ResultSet rset = stmt.executeQuery("select f.* from users u,friend_requests f where u.email = '" + this.email + "' and u.email = f.femail");
 
 		System.out.println();
-		while (rs.next())
+		while (rset.next())
 		{
-			if (rs.getString("checked").toLowerCase().toCharArray()[0] == 'n')
+			if (rset.getString("checked").toLowerCase().toCharArray()[0] == 'n')
 			{
-				String friend = rs.getString("email");
+				String friend = rset.getString("email");
 				System.out.println("You have a friend request from: " + friend);
 
 				char ans[];
@@ -460,7 +460,7 @@ public class UserPage {
 				} while( !(ans.length == 1 && (ans[0] == 'y' || ans[0] == 'n' || ans[0] == 'i')));
 
 				// We still need rset for our loop. So we'll just pass a clone down.
-				Statement cloneStmt = rset.getConnection().createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
+				Statement cloneStmt = stmt.getConnection().createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
 
 				if (ans[0] == 'y')
 				{
@@ -548,11 +548,14 @@ public class UserPage {
 			}
 			else
 			{
-				mid = rset.getInt(1);
+				// Get the previous max and increment it by one obtain next number in sequence. 
+				// Should have used a damn index.
+				mid = rset.getInt(1) + 1;
 			}
 
 			stmt.executeUpdate("insert into messages values (" + mid + ",sysdate,'I have rejected your friend request!','" + this.email + "')");
 			stmt.executeUpdate("insert into receives values (" + mid + ",'" + requestor + "')");
+			System.out.println("WE jhave inserted");
 			stmt.executeUpdate("delete from friend_requests where femail='"+ this.email + "' and email='" + requestor + "'");
 			System.out.println("Friend request rejected.");
 		}
@@ -612,7 +615,8 @@ public class UserPage {
 			}
 			else
 			{
-				sno = rset.getInt(1);
+				// Obtain next sno by incrementing max.
+				sno = rset.getInt(1) + 1;
 			}
 		}
 		catch (SQLException e)
@@ -752,7 +756,7 @@ public class UserPage {
 		try
 		{
 			// If max(mid) is null, 0 is returned which works nicely.
-			int messageId = stmt.executeQuery("select max(mid) from messages").getInt(1);
+			int messageId = stmt.executeQuery("select max(mid) from messages").getInt(1) + 1;
 
 			// Insert into messages table.
 			stmt.executeUpdate("insert into messages values('" + messageId + "', current_date, '" + content + "', '" + this.email + "')");
