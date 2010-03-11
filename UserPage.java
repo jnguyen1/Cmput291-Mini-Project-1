@@ -16,23 +16,23 @@ public class UserPage {
 	static boolean loggedOn = true;
 	public void startUp() throws SQLException{
 		createString = "select name from users where email = '"+email+"'";
-		
+
 		ResultSet rs = Main.stmt.executeQuery(createString);
-		
+
 		if(rs.next())
 			user = rs.getString("name").trim();
-		
-		
+
+
 		System.out.println();
 		System.out.println("Welcome "+user+". Here are your options for today.");
 		//if there are notifications, show them first then menu
-	
+
 		if(this.checkFreqests(Main.m_con,Main.stmt, friend, friends));
 		// TODO: This is a weird conditional.
-				
+
 		String in;
 		boolean run = true;
-		
+
 		while(run){
 			System.out.println();
 			System.out.println("Menu:");
@@ -45,42 +45,42 @@ public class UserPage {
 			System.out.println("7. Check inbox.");
 			System.out.println("8. Logout.");
 			int input = Keyboard.in.readInteger().intValue();
-			
+
 			switch(input){
-			case 1:
-				this.searchPages(Main.stmt);
-				break;
-			case 2:
-				System.out.print("Search user: ");
-				in = Keyboard.in.readString();
-				this.searchUser(Main.m_con, Main.stmt, in);
-				break;
-			case 3:
-				this.sendFriendRequest(Main.stmt);
-			case 4:
-				System.out.print("Status: ");
-				in = Keyboard.in.readString();
-				this.postStatus(Main.m_con, Main.stmt, in);
-				break;
-			case 5:
-				this.fstatus(Main.m_con, Main.stmt);
-				break;
-			case 6:
-				this.sendMessage(Main.stmt);
-				break;
-			case 7:
-				this.inbox(Main.m_con, Main.stmt);
-				break;
-			case 8:
-				run = false;
-				break;
-			default:
-				System.out.println("Please enter a valid numerical value which corresponds to the menu.");
-				break;
+				case 1:
+					this.searchPages(Main.stmt);
+					break;
+				case 2:
+					System.out.print("Search user: ");
+					in = Keyboard.in.readString();
+					this.searchUser(Main.m_con, Main.stmt, in);
+					break;
+				case 3:
+					this.sendFriendRequest(Main.stmt);
+				case 4:
+					System.out.print("Status: ");
+					in = Keyboard.in.readString();
+					this.postStatus(Main.m_con, Main.stmt, in);
+					break;
+				case 5:
+					this.fstatus(Main.m_con, Main.stmt);
+					break;
+				case 6:
+					this.sendMessage(Main.stmt);
+					break;
+				case 7:
+					this.inbox(Main.m_con, Main.stmt);
+					break;
+				case 8:
+					run = false;
+					break;
+				default:
+					System.out.println("Please enter a valid numerical value which corresponds to the menu.");
+					break;
 			}
 		}
 	}
-	
+
 	/**
 	 * Function:
 	 * Searches through pages table for records whose title or content contains the supplied keywords.
@@ -183,26 +183,26 @@ public class UserPage {
 	private Vector<String> getKeywords()
 	{
 		String[] input = Keyboard.in.readString().split(" ");
-			
+
 		Vector<String> keywords = new Vector<String>(Arrays.asList(input));
 		return keywords;
-//		String word;
-//
-//		System.out.println("Enter keywords to search title and content for. Newline to finish list.");
-//		while (true)
-//		{
-//			word = Keyboard.in.readString();
-//			if (word.length() == 0)
-//			{
-//				break;
-//			}
-//			else
-//			{
-//				keywords.add(word);
-//			}
-//		}
-//
-//		return keywords;
+		//		String word;
+		//
+		//		System.out.println("Enter keywords to search title and content for. Newline to finish list.");
+		//		while (true)
+		//		{
+		//			word = Keyboard.in.readString();
+		//			if (word.length() == 0)
+		//			{
+		//				break;
+		//			}
+		//			else
+		//			{
+		//				keywords.add(word);
+		//			}
+		//		}
+		//
+		//		return keywords;
 	}
 
 	/**
@@ -377,11 +377,11 @@ public class UserPage {
 		{
 			condition.concat(" or name like '%" + strArr[i] + "%' or email like '%" + strArr[i] + "%'");
 		}
-		
+
 		String str = "select * from users where "+condition;
-		
+
 		ResultSet rs = s.executeQuery(str);
-		
+
 		if(rs == null)//rs can't be null... find some way to put if output is empty
 			System.out.println("Sorry, that user does not exist. If you are looking for a name, try captailizing the first letter of the name you are looking for.");
 		else{
@@ -400,25 +400,25 @@ public class UserPage {
 		sno++;
 		String str = "insert into status values ('"+email+"',"+sno+",'"+status+"',sysdate)";
 		System.out.println(status);
-		
+
 		try{
-		s.executeUpdate(str);
-		
-		System.out.println("Status posted successfully!");
+			s.executeUpdate(str);
+
+			System.out.println("Status posted successfully!");
 		}
 		catch(SQLException ex) {
 
 			System.err.println("SQLException: " +
-			ex.getMessage());
+					ex.getMessage());
 
 		}
-		
+
 	}
-	
+
 	private void fstatus(Connection conn, Statement s){
 		//john is working on this
 	}
-	
+
 	/**
 	 * Function:
 	 * Implements query 8. User interface for sending messages to other users.
@@ -526,10 +526,10 @@ public class UserPage {
 	}
 
 	private void inbox(Connection conn, Statement s){
-		
+
 	}
 
-	
+
 	private boolean checkFreqests(Connection conn, Statement s, String fri, String[] fris) throws SQLException{
 		ResultSet rs = s.executeQuery("select f.* from users u,friend_requests f where u.email = '"+email+"' and u.email = f.femail");
 
@@ -553,17 +553,17 @@ public class UserPage {
 				else if(ans[0] == 'i')
 					this.ignoreRequest(friend,email,Main.stmt);
 			}
-		
+
 		}
 		rs = s.executeQuery("select f.* from users u,friend_requests f where u.email = '"+email+"' and u.email = f.femail");
-		
+
 		if(rs.next()){
 			return true;
 		}
-			
+
 		return false;
 	}
-	
+
 	/*
 	 * parameters for the next 3 methods:
 	 * str1 = femail (inviter)
@@ -582,7 +582,7 @@ public class UserPage {
 			System.err.println("SQLException: " + ex);
 		}
 	}
-	
+
 	private void rejectFriend(String str1, String str2, Statement s){
 		try{
 			s.executeUpdate("insert into messages values ('1',sysdate,'I have rejected your friend request!','"+str2+"')");
@@ -593,7 +593,7 @@ public class UserPage {
 			System.err.println("SQLException: " + ex);
 		}
 	}
-	
+
 	private void ignoreRequest(String str1, String str2, Statement s){
 		try{
 			s.executeUpdate("update friend_requests set checked = 'y' where femail='"+str1+"' and email='"+str2+"'");

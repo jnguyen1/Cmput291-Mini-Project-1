@@ -5,7 +5,7 @@ public class Main {
 	/**
 	 * @param args
 	 */
-	
+
 	static String m_url = "jdbc:oracle:thin:@gwynne.cs.ualberta.ca:1521:CRS";
 	static String m_driverName = "oracle.jdbc.driver.OracleDriver";
 
@@ -13,74 +13,74 @@ public class Main {
 	static String m_password = "urarurar12";
 
 	static Connection m_con;
-	
+
 	static Statement stmt;
-	
+
 	static String createString;
 	static String user;
-	
+
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
-		
+
 		try
 		{
 
-		Class drvClass = Class.forName(m_driverName);
-		DriverManager.registerDriver((Driver)
-		drvClass.newInstance());
-		m_con = DriverManager.getConnection(m_url, m_userName, m_password);
+			Class drvClass = Class.forName(m_driverName);
+			DriverManager.registerDriver((Driver)
+					drvClass.newInstance());
+			m_con = DriverManager.getConnection(m_url, m_userName, m_password);
 
-		System.out.println();
-		System.out.println("Welcome! Please log in with your e-mail and password or choose the next option " +
-				"to register if you don't have an account yet. (Type the corresponding number for the option you want)");
-		
-		int input;
-		boolean menu = true;
-		
-		while(menu){
 			System.out.println();
-			System.out.println("Main menu:");
-			System.out.println("1. Login (for registered users)");
-			System.out.println("2. Register");
-			System.out.println("3. Exit");
-			input = Keyboard.in.readInteger().intValue();
+			System.out.println("Welcome! Please log in with your e-mail and password or choose the next option " +
+					"to register if you don't have an account yet. (Type the corresponding number for the option you want)");
 
-			switch(input){
-			case 1:
-				if(login()){
-					System.out.println("Login successful... Please wait to be directed to the user screen.");
-					UserPage nUser = new UserPage(user);
-					nUser.startUp();
+			int input;
+			boolean menu = true;
+
+			while(menu){
+				System.out.println();
+				System.out.println("Main menu:");
+				System.out.println("1. Login (for registered users)");
+				System.out.println("2. Register");
+				System.out.println("3. Exit");
+				input = Keyboard.in.readInteger().intValue();
+
+				switch(input){
+					case 1:
+						if(login()){
+							System.out.println("Login successful... Please wait to be directed to the user screen.");
+							UserPage nUser = new UserPage(user);
+							nUser.startUp();
+						}
+						else
+							System.out.println("Username or password is wrong. Please try again.");
+						break;
+					case 2:
+						register();
+						break;
+					case 3:
+						menu = false;
+						break;
+					default:
+						System.out.println("Please enter a valid value determined by the numbered options listed.");
+						break;
 				}
-				else
-					System.out.println("Username or password is wrong. Please try again.");
-				break;
-			case 2:
-				register();
-				break;
-			case 3:
-				menu = false;
-				break;
-			default:
-				System.out.println("Please enter a valid value determined by the numbered options listed.");
-				break;
 			}
-		}
 
-		System.out.println("Goodbye!");
-		
+			System.out.println("Goodbye!");
+
 		} catch(Exception e)
 		{
 
-		System.err.print("ClassNotFoundException: ");
-		System.err.println(e.getMessage());
+			System.err.print("ClassNotFoundException: ");
+			System.err.println(e.getMessage());
 
 		}
 		finally
 		{
 			try
 			{
-		m_con.close();
+				m_con.close();
 			}
 			catch (SQLException e)
 			{
@@ -88,41 +88,41 @@ public class Main {
 			}
 		}
 	}
-	
+
 	public static boolean login(){
-		
+
 		String pass;
-		
+
 		System.out.print("E-mail: ");
 		user = Keyboard.in.readString();
-		
+
 		System.out.print("Password: ");
 		pass = Keyboard.in.readString();
-		
+
 		createString = "select email, pwd from users where email ='"+user+"' and pwd ='"+pass+"'";
-		
+
 		try
 		{
 
-		ResultSet rs = stmt.executeQuery(createString);		
-		
-		if(rs.next())
-			return true;
-		else
-			return false;
+			ResultSet rs = stmt.executeQuery(createString);		
+
+			if(rs.next())
+				return true;
+			else
+				return false;
 
 		} catch(SQLException ex) {
 
-		System.err.println("SQLException: " +
-		ex.getMessage());
+			System.err.println("SQLException: " +
+					ex.getMessage());
 
 		}
 	}
-	
+
 	public static void register(){
 		String email, name, city, pass, pass2; 
 		char[] gender;
-		
+
 		System.out.println("Welcome to the registration process.");
 
 		System.out.print("Enter your e-mail: ");
@@ -157,18 +157,18 @@ public class Main {
 		}
 
 		System.out.println("Thank you. Entering information into database... Please wait a moment.");
-		
+
 		createString = "insert into users values ('"+email+"','"+name+"','"+city+"','"+gender[0]+"','"+pass+"')";
-		
+
 		try{
 			stmt.executeUpdate(createString);
-			
+
 			System.out.println("Congrats! You have created your account. You will now be directed to the login screen.");
 			Keyboard.in.pause();
 		} catch(SQLException ex) {
 
 			System.err.println("SQLException: " +
-			ex.getMessage());
+					ex.getMessage());
 
 		}
 	}
