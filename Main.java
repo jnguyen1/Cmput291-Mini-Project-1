@@ -16,8 +16,6 @@ public class Main {
 	
 	static Statement stmt;
 	
-	static boolean menu;
-	
 	static String createString;
 	static String user;
 	
@@ -36,15 +34,17 @@ public class Main {
 		System.out.println("Welcome! Please log in with your e-mail and password or choose the next option " +
 				"to register if you don't have an account yet. (Type the corresponding number for the option you want)");
 		
-		System.out.println("1. Login (for registered users)");
-		System.out.println("2. Register");
-		System.out.println("3. Exit");
-		
-		int input = Keyboard.in.readInteger().intValue();
-		menu = true;
+		int input;
+		boolean menu = true;
 		
 		while(menu){
-			
+			System.out.println();
+			System.out.println("Main menu:");
+			System.out.println("1. Login (for registered users)");
+			System.out.println("2. Register");
+			System.out.println("3. Exit");
+			input = Keyboard.in.readInteger().intValue();
+
 			switch(input){
 			case 1:
 				if(login()){
@@ -65,16 +65,6 @@ public class Main {
 				System.out.println("Please enter a valid value determined by the numbered options listed.");
 				break;
 			}
-			
-			if(menu){
-				System.out.println();
-				System.out.println("Main menu:");
-				System.out.println("1. Login (for registered users)");
-				System.out.println("2. Register");
-				System.out.println("3. Exit");
-				input = Keyboard.in.readInteger().intValue();
-			}
-			
 		}
 
 		System.out.println("Goodbye!");
@@ -111,20 +101,15 @@ public class Main {
 		
 		createString = "select email, pwd from users where email ='"+user+"' and pwd ='"+pass+"'";
 		
-		boolean exists = false;
-		
 		try
 		{
 
-		stmt = m_con.createStatement();
 		ResultSet rs = stmt.executeQuery(createString);		
 		
-		if(!rs.next());
+		if(rs.next())
+			return true;
 		else
-			exists = true;
-		
-		rs.close();
-		stmt.close();
+			return false;
 
 		} catch(SQLException ex) {
 
@@ -132,24 +117,21 @@ public class Main {
 		ex.getMessage());
 
 		}
-		
-		if(exists)
-			return true;
-		else
-			return false;
 	}
 	
 	public static void register(){
 		String email, name, city, pass, pass2; 
 		char[] gender;
 		
-		System.out.println("Please enter your information as follows (type 1 and press enter if you have to go back " +
-				"to change your information):");
-		System.out.print("Please enter your e-mail: ");
+		System.out.println("Welcome to the registration process.");
+
+		System.out.print("Enter your e-mail: ");
 		email = Keyboard.in.readString();
-		System.out.print("Now your (full) name: ");
+
+		System.out.print("Enter your (full) name: ");
 		name = Keyboard.in.readString();
-		System.out.print("City: ");
+
+		System.out.print("Enter the City: ");
 		city = Keyboard.in.readString();
 
 		do
@@ -160,27 +142,29 @@ public class Main {
 
 		System.out.print("Finally, enter your password: ");
 		pass = Keyboard.in.readString();
+
 		System.out.print("Confirm your password: ");
 		pass2 = Keyboard.in.readString();
+
 		while(pass.compareTo(pass2) != 0){
+			System.out.println("Passwords do not match!");
+
 			System.out.print("Please re-enter your password: ");
 			pass = Keyboard.in.readString();
+
 			System.out.print("Confirm your password: ");
 			pass2 = Keyboard.in.readString();
 		}
+
 		System.out.println("Thank you. Entering information into database... Please wait a moment.");
 		
 		createString = "insert into users values ('"+email+"','"+name+"','"+city+"','"+gender[0]+"','"+pass+"')";
 		
 		try{
-			stmt = m_con.createStatement();
 			stmt.executeUpdate(createString);
 			
-			stmt.close();
-			
 			System.out.println("Congrats! You have created your account. You will now be directed to the login screen.");
-			Keyboard p = new Keyboard();
-			p.pause();
+			Keyboard.in.pause();
 		} catch(SQLException ex) {
 
 			System.err.println("SQLException: " +
