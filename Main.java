@@ -153,38 +153,47 @@ public class Main {
 	 */
 	private static void register(Statement stmt)
 	{
-		String email, name, city, pass, pass2; 
-		char[] gender;
+		String email, name, city, pass1, pass2; 
+		char gender;
 
 		System.out.println("Welcome to the registration process.");
 
-		System.out.print("Enter your e-mail: ");
-		email = Keyboard.in.readString();
+		do
+		{
+			System.out.print("Enter your e-mail (1-25 char): ");
+			email = Keyboard.in.readString();
+		} while (email.length() > 25 || email.length() == 0);
 
-		System.out.print("Enter your (full) name: ");
-		name = Keyboard.in.readString();
+		do
+		{
+			System.out.print("Enter your (full) name (0-16 char): ");
+			name = Keyboard.in.readString();
+		} while (name.length() > 16);
 
-		System.out.print("Enter the City: ");
-		city = Keyboard.in.readString();
+		do
+		{
+			System.out.print("Enter the City (0-12 char): ");
+			city = Keyboard.in.readString();
+		} while (city.length() > 12);
 
 		do
 		{
 			System.out.print("Please enter either M or F for gender: ");
-			gender = Keyboard.in.readString().toLowerCase().toCharArray();
-		} while ( !(gender.length == 1 && (gender[0] == 'm' || gender[0] == 'f')) );
+			gender = Keyboard.in.readString().toLowerCase().charAt(0);
+		} while (gender != 'm' && gender != 'f');
 
 		System.out.print("Finally, enter your password: ");
-		pass = Keyboard.in.readString();
+		pass1 = Keyboard.in.readString();
 
 		System.out.print("Confirm your password: ");
 		pass2 = Keyboard.in.readString();
 
-		while (pass.compareTo(pass2) != 0)
+		while (pass1.length() > 4 || pass1.compareTo(pass2) != 0)
 		{
 			System.out.println("Passwords do not match!");
 
 			System.out.print("Please re-enter your password: ");
-			pass = Keyboard.in.readString();
+			pass1 = Keyboard.in.readString();
 
 			System.out.print("Confirm your password: ");
 			pass2 = Keyboard.in.readString();
@@ -194,7 +203,7 @@ public class Main {
 
 		try
 		{
-			String query = String.format("insert into users values ('%s','%s','%s','%c','%s')", email, name, city, gender[0], pass);
+			String query = String.format("insert into users values ('%s','%s','%s','%c','%s')", email, name, city, gender, pass1);
 			stmt.executeUpdate(query);
 
 			System.out.println("Congrats! You have created your account. You will now be directed to the login screen.");
