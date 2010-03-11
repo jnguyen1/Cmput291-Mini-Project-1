@@ -96,7 +96,7 @@ public class UserPage {
 					this.sendMessage(this.stmt);
 					break;
 				case 7:
-					this.inbox(this.stmt);
+					this.checkMessages(this.stmt);
 					break;
 				case 8:
 					run = false;
@@ -484,6 +484,8 @@ public class UserPage {
 				{
 					this.ignoreRequest(cloneStmt, friend);
 				}
+
+				cloneStmt.close();
 			}
 		}
 	}
@@ -654,8 +656,106 @@ public class UserPage {
 		}
 	}
 
+	/**
+	 * Function:
+	 * List the status posts of the user's friends that are within 3 days. Then the comments
+	 * related to that status are displayed. The user can add their own comment.
+	 *
+	 * Param:
+	 * stmt - Statement object to execute sql statements on.
+	 *
+	 * Return:
+	 * None.
+	 *
+	 * jnguyen1 20100311
+	 */
 	private void listStatus(Statement stmt){
-		//john is working on this
+		try
+		{
+			ResultSet rset = stmt.executeQuery("select s.* from status s join friends f on (s.email = f.femail)" +
+					"where f.email = '" + this.email + "' and round(pdate) >= round(sysdate)-3"); 
+			while (rset.next())
+			{
+				String statusResult = String.format("%3d %25s %s %s\n",
+						rset.getRow(), rset.getString("email"), rset.getString("pdate"), rset.getString("text"));
+				System.out.println(statusResult);
+				Statement cloneStmt = stmt.getConnection().createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
+				this.listComments(cloneStmt,rset.getString("email"), rset.getInt("sno"));
+				cloneStmt.close();
+			}
+
+			rset.last();
+			int count = rset.getRow();
+			if (count == 0)
+			{
+				System.out.println("No status postings found.");
+				return;
+			}
+
+			System.out.println("Choose a status to comment on (-1 to cancel)");
+			int choice = Keyboard.in.readInteger();
+			if (choice == -1 || choice > count)
+			{
+				return;
+			}
+			else
+			{
+				// Get the data we need before 'releasing' the result set back out.
+				rset.absolute(choice);
+				int sno = rset.getInt("sno");
+				String semail = rset.getString("email");
+
+				System.out.println("Enter comment:");
+				String comment = Keyboard.in.readString();
+				
+				// Calculate the next cno number by incrementing the max value.
+				rset = stmt.executeQuery("select max(cno) from comments");
+				rset.next();
+				int cno = rset.getInt(1) + 1;
+
+				String insert = String.format("insert into comments values('%s',%d,%d,'%s','%s',sysdate)", this.email, cno, sno, semail,comment);
+				stmt.executeUpdate(insert);
+				System.out.println("You have commented succesfully to the status.");
+			}
+		}
+		catch (SQLException e)
+		{
+			System.out.println("Could not get status listing." + e.getMessage());
+		}
+	}
+	
+	/**
+	 * Function:
+	 * List all the comments of a status post.
+	 *
+	 * Param:
+	 * stmt - Statement object to execute sql statements on.
+	 * senderEmail - the user who made the comment.
+	 * sno - the number of the status posting.
+	 *
+	 * Return:
+	 * None.
+	 *
+	 * jnguyen1 20100311
+	 */
+	private void listComments(Statement stmt, String senderEmail, int sno)
+	{
+		try
+		{
+			ResultSet rset = stmt.executeQuery("select * from comments where semail = '" + senderEmail + "' and sno = " + sno);
+			while (rset.next())
+			{
+				String commentResult = String.format("	Comment:%25s %s %s\n",
+						rset.getString("email"), rset.getString("cdate"), rset.getString("text"));
+				System.out.println(commentResult);
+			}
+
+			System.out.println();
+		}
+		catch (SQLException e)
+		{
+			System.out.println("Could not get comments." + e.getMessage());
+		}
 	}
 
 	/**
@@ -764,8 +864,10 @@ public class UserPage {
 	{
 		try
 		{
+			ResultSet rset = stmt.executeQuery("select max(mid) from messages");
+			rset.next();
 			// If max(mid) is null, 0 is returned which works nicely.
-			int messageId = stmt.executeQuery("select max(mid) from messages").getInt(1) + 1;
+			int messageId = rset.getInt(1) + 1;
 
 			// Insert into messages table.
 			stmt.executeUpdate("insert into messages values('" + messageId + "', current_date, '" + content + "', '" + this.email + "')");
@@ -775,9 +877,12 @@ public class UserPage {
 			{
 				this.sendMessageToUserSql(stmt, messageId, (String)itr.next());
 			}
+
+			System.out.println("Message sent to users.");
 		}
-		catch (Exception e)
+		catch (SQLException e)
 		{
+			System.out.println("Could not create message." + e.getMessage());
 		}
 	}
 
@@ -808,8 +913,55 @@ public class UserPage {
 		}
 	}
 
-	private void inbox(Statement s){
+	private void checkMessages(Statement s)
+	{
+		try
+		{
+			ResultSet rset = stmt.executeQuery("select * from messages join receives using (mid) where receives.email = '" + this.email + "'");
 
+			rset.last();
+			if (rset.getRow() == 0)
+			{
+				System.out.println("No messages in inbox.");
+				return;
+			}
+			else
+			{
+				rset.beforeFirst();
+			}
+
+			while (rset.next())
+			{
+				Statement cloneStmt = stmt.getConnection().createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
+
+				String message = String.format("%s %s %s\n", rset.getString("sender"), rset.getString("mdate"), rset.getString("text"));
+				System.out.println(message);
+				char choice;
+				do
+				{
+					System.out.print("Delete? (Y[es] or N[o]: ");
+					choice = Keyboard.in.readString().toLowerCase().charAt(0);
+				} while( choice != 'y' && choice != 'n');
+
+				if (choice == 'y')
+				{
+					cloneStmt.executeUpdate("delete from receives where email = '" + this.email + "' and mid = " + rset.getInt("mid"));
+					// Check if the message no longer has any entry in receives.
+					ResultSet cloneRset = cloneStmt.executeQuery("select count(*) from messages join receives using (mid) where mid = '" + rset.getString("mid") + "'");
+					cloneRset.last();
+					if (cloneRset.getRow() == 0)
+					{
+						cloneStmt.executeUpdate("delete from messages where mid = " + rset.getInt("mid"));
+					}
+				}
+
+				cloneStmt.close();
+			}
+		}
+		catch (SQLException e)
+		{
+			System.out.println("Could not check messages." + e.getMessage());
+		}
 	}
 
 }
