@@ -9,9 +9,9 @@ public class UserPage {
 	static String friend = new String();
 	static String friends[] = new String[25];
 
-	public UserPage(Connection conn, String email){
+	public UserPage(Connection conn, String email) throws SQLException{
 		this.email = email;
-		this.stmt = conn.createStatement(ResultSet.TYPE_SCROLL_INSENSTIVE, ResultSet.CONCUR_UPDATABLE);
+		this.stmt = conn.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
 	}
 
 	/**
@@ -20,9 +20,16 @@ public class UserPage {
 	 *
 	 * jnguyen1 20100311
 	 */
-	protected void finalize()
+	protected void finalize() throws Throwable
 	{
-		this.stmt.close();
+		try
+		{
+			this.stmt.close();
+		}
+		catch (SQLException e)
+		{
+			System.out.println("Error closing statement.");
+		}
 		super.finalize();
 	}
 

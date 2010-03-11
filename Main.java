@@ -9,12 +9,11 @@ public class Main {
 	static String m_password = "urarurar12";
 
 	static Connection m_con;
+	static Statement stmt;
 
 	static String user;
 
 	public static void main(String[] args) {
-		// TODO Auto-generated method stub
-
 		try
 		{
 
@@ -22,7 +21,7 @@ public class Main {
 			DriverManager.registerDriver((Driver)
 					drvClass.newInstance());
 			m_con = DriverManager.getConnection(m_url, m_userName, m_password);
-			Statement stmt = m_con.createStatement(ResultSet.TYPE_SCROLL_INSENSTIVE, ResultSet.CONCUR_UPDATABLE);
+			stmt = m_con.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
 
 			System.out.println();
 			System.out.println("Welcome! Please log in with your e-mail and password or choose the next option " +
@@ -43,7 +42,7 @@ public class Main {
 					case 1:
 						if(login(stmt)){
 							System.out.println("Login successful... Please wait to be directed to the user screen.");
-							UserPage nUser = new UserPage(user);
+							UserPage nUser = new UserPage(m_con, user);
 							nUser.startUp();
 						}
 						else
@@ -103,8 +102,6 @@ public class Main {
 
 			if(rs.next())
 				return true;
-			else
-				return false;
 
 		} catch(SQLException ex) {
 
@@ -112,6 +109,8 @@ public class Main {
 					ex.getMessage());
 
 		}
+
+		return false;
 	}
 
 	public static void register(Statement stmt){
