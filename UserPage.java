@@ -1,8 +1,5 @@
 import java.sql.*;
-import java.util.Vector;
-import java.util.Collections;
-import java.util.Iterator;
-
+import java.util.*;
 
 public class UserPage {
 
@@ -55,16 +52,7 @@ public class UserPage {
 			
 			switch(input){
 			case 1:
-				System.out.print("Search: ");
-				in = Keyboard.in.readString();
-				in.toLowerCase();
-			
-				String searchArr[] = in.split(" ");
-				Vector<String> words = new Vector<String>();
-				for(int i = 0; i < searchArr.length; i++)
-					words.add(searchArr[i]);
-			
-				this.searchPages(Main.m_con, words);
+				this.searchPages(Main.stmt);
 				break;
 			case 2:
 				System.out.print("Search user: ");
@@ -264,6 +252,7 @@ public class UserPage {
 	 */
 	private void searchPages(Statement stmt) throws SQLException
 	{
+		System.out.print("Search: ");
 		Vector<String> keywords = this.getKeywords();
 		if (keywords.size() == 0)
 		{
@@ -346,24 +335,27 @@ public class UserPage {
 	 */
 	private Vector<String> getKeywords()
 	{
-		Vector<String> keywords = new Vector<String>();
-		String word;
-
-		System.out.println("Enter keywords to search title and content for. Newline to finish list.");
-		while (true)
-		{
-			word = Keyboard.in.readString();
-			if (word.length() == 0)
-			{
-				break;
-			}
-			else
-			{
-				keywords.add(word);
-			}
-		}
-
+		String[] input = Keyboard.in.readString().split(" ");
+			
+		Vector<String> keywords = new Vector<String>(Arrays.asList(input));
 		return keywords;
+//		String word;
+//
+//		System.out.println("Enter keywords to search title and content for. Newline to finish list.");
+//		while (true)
+//		{
+//			word = Keyboard.in.readString();
+//			if (word.length() == 0)
+//			{
+//				break;
+//			}
+//			else
+//			{
+//				keywords.add(word);
+//			}
+//		}
+//
+//		return keywords;
 	}
 
 	/**

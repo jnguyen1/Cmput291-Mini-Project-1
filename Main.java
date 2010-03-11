@@ -88,7 +88,14 @@ public class Main {
 		}
 		finally
 		{
+			try
+			{
 		m_con.close();
+			}
+			catch (SQLException e)
+			{
+				System.out.println("Could not close connection.");
+			}
 		}
 	}
 	
