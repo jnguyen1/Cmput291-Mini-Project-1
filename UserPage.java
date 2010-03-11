@@ -85,10 +85,12 @@ public class UserPage {
 					break;
 				case 3:
 					this.sendFriendRequest(this.stmt);
+					break;
 				case 4:
+					this.postStatus(this.stmt);
 					break;
 				case 5:
-					this.fstatus(this.stmt);
+					this.listStatus(this.stmt);
 					break;
 				case 6:
 					this.sendMessage(this.stmt);
@@ -416,6 +418,14 @@ public class UserPage {
 				return;
 			}
 
+			rset = stmt.executeQuery("select * from friends where email = '" + friend + "' and femail = '" + this.email + "'");
+			rset.last();
+			if (rset.getRow() != 0)
+			{
+				System.out.println("You are already friends. Friends don't forget friends.");
+				return;
+			}
+
 			String query = String.format("insert into friend_requests values('%s', '%s', 'N')", this.email, friend);
 			stmt.executeUpdate(query);
 
@@ -505,7 +515,7 @@ public class UserPage {
 			}
 			else
 			{
-				mid = rset.getInt(1);
+				mid = rset.getInt(1) + 1;
 			}
 
 			stmt.executeUpdate("insert into friends values ('" + requestor + "', '" + this.email + "')");
@@ -632,7 +642,6 @@ public class UserPage {
 		} while(status.length() >40);
 
 		query = "insert into status values ('" + this.email + "'," + sno + ",'" + status + "',sysdate)";
-		System.out.println(status);
 
 		try
 		{
@@ -645,7 +654,7 @@ public class UserPage {
 		}
 	}
 
-	private void fstatus(Statement stmt){
+	private void listStatus(Statement stmt){
 		//john is working on this
 	}
 
