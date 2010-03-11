@@ -295,7 +295,7 @@ public class UserPage {
 
 		while(rset.next())
 		{ 
-			System.out.format("%3d %20s %20s %20s\n", rset.getRow(), rset.getString("email"),
+			System.out.format("%3d %16s %12s %1s\n", rset.getRow(), rset.getString("email"),
 					rset.getString("name"),
 					rset.getString("city"),
 					rset.getString("gender")
@@ -319,6 +319,13 @@ public class UserPage {
 			}
 			else
 			{
+				rset.last();
+				if (menuChoice > rset.getRow() || menuChoice < 1)
+				{
+					System.out.println("Invalid choice. Returning to menu.");
+					break;
+				}
+
 				// Request user stat if we can move to selected entry from rset.
 				if(rset.absolute(menuChoice))
 				{
@@ -381,8 +388,192 @@ public class UserPage {
 		System.out.println(messageCount + " number of messages sent.");
 	}
 
+	/**
+	 * Function:
+	 * Send a friend request to another user.
+	 *
+	 * Param:
+	 * stmt - the Statement object to execute statements on.
+	 *
+	 * Return:
+	 * None.
+	 *
+	 * jnguyen1 20100311
+	 */
 	private void sendFriendRequest(Statement stmt)
 	{
+		System.out.println("Enter email to send friend request to.");
+		String friend = Keyboard.in.readString();
+
+		ResultSet rset = stmt.executeQuery("select * from users where email = '" + friend + "'");
+
+		rset.last();
+		if (rset.getRow() != 1)
+		{
+			System.out.println("Your friend does not exist.");
+			return;
+		}
+
+		String query = String.format("insert into friend_requests values('%s', '%s', 'N')", this.email, friend);
+		stmt.executeUpdate(query);
+	}
+
+	/**
+	 * Function:
+	 * Check for new friend requests and accept, reject, or ignore these requests.
+	 *
+	 * Param:
+	 * stmt - Statement object to execute sql statements on.
+	 *
+	 * Return:
+	 * None.
+	 *
+	 * schwehr 20100310
+	 */
+	private void checkFreqests(Statement stmt) throws SQLException
+	{
+		ResultSet rs = stmt.executeQuery("select f.* from users u,friend_requests f where u.email = '" + this.email + "' and u.email = f.femail");
+
+		System.out.println();
+		while (rs.next())
+		{
+			if (rs.getString("checked").toLowerCase().toCharArray()[0] == 'n')
+			{
+				String friend = rs.getString("email");
+				System.out.println("You have a friend request from: " + friend);
+
+				char ans[];
+				do
+				{
+					System.out.print("Accept or ignore? (Y[es] or N[o] or I[gnore]): ");
+					ans = Keyboard.in.readString().toLowerCase().toCharArray();
+					System.out.println(ans[0]);
+				} while( !(ans.length == 1 && (ans[0] == 'y' || ans[0] == 'n' || ans[0] == 'i')));
+
+				if (ans[0] == 'y')
+				{
+					this.addFriend(stmt, friend);
+				}
+				else if (ans[0] == 'n')
+				{
+					this.rejectFriend(stmt, friend);
+				}
+				else if (ans[0] == 'i')
+				{
+					this.ignoreRequest(stmt, friend);
+				}
+			}
+		}
+	}
+
+	/**
+	 * Function:
+	 * Accept a friend request. Insert into friends table. Send a message to the friend declaring
+	 * friendship. Remove the friend_requests record.
+	 *
+	 * Param:
+	 * stmt - Statement object to execute sql statements on.
+	 * requestor - the user requesting friendship.
+	 *
+	 * Return:
+	 * None.
+	 *
+	 * schwehr 20100310
+	 */
+	private void addFriend(Statement stmt, String requestor)
+	{
+		try
+		{
+			int mid;
+			ResultSet rset = stmt.executeQuery("select max(mid) from messages");
+			if (!rset.next())
+			{
+				System.out.println("Could not get mid.");
+				return;
+			}
+			else
+			{
+				mid = rset.getInt(1);
+			}
+
+			stmt.executeUpdate("insert into friends values ('" + requestor + "', '" + this.email + "')");
+			stmt.executeUpdate("insert into friends values ('" + this.email + "', '" + requestor + "')");
+			stmt.executeUpdate("insert into messages values (" + mid + ",sysdate,'I have accepted your friend request!','" + this.email + "')");
+			stmt.executeUpdate("insert into receives values (" + mid + ",'" + requestor + "')");
+			stmt.executeUpdate("delete from friend_requests where femail='" + this.email + "' and email='" + requestor +"'");
+			System.out.println("Friend request accepted.");
+		}
+		catch(SQLException ex)
+		{
+			System.err.println("Could not add friend: " + ex);
+		}
+	}
+
+	/**
+	 * Function:
+	 * Reject a friend request. Send a message of rejection.
+	 * Remove the friend_requests record.
+	 *
+	 * Param:
+	 * stmt - Statement object to execute sql statements on.
+	 * requestor - the user requesting friendship.
+	 *
+	 * Return:
+	 * None.
+	 *
+	 * schwehr 20100310
+	 */
+	private void rejectFriend(Statement stmt, String requestor)
+	{
+		try
+		{
+			int mid;
+			ResultSet rset = stmt.executeQuery("select max(mid) from messages");
+			if (!rset.next())
+			{
+				System.out.println("Could not get mid.");
+				return;
+			}
+			else
+			{
+				mid = rset.getInt(1);
+			}
+
+			stmt.executeUpdate("insert into messages values (" + mid + ",sysdate,'I have rejected your friend request!','" + this.email + "')");
+			stmt.executeUpdate("insert into receives values (" + mid + ",'" + requestor + "')");
+			stmt.executeUpdate("delete from friend_requests where femail='"+ this.email + "' and email='" + requestor + "'");
+			System.out.println("Friend request rejected.");
+		}
+		catch (SQLException ex)
+		{
+			System.err.println("Could not reject friend: " + ex);
+		}
+	}
+
+	/**
+	 * Function:
+	 * Ignore a friend request. Update the friend_requests record and mark as checked.
+	 *
+	 * Param:
+	 * stmt - Statement object to execute sql statements on.
+	 * requestor - the user requesting friendship.
+	 *
+	 * Return:
+	 * None.
+	 *
+	 * schwehr 20100310
+	 */
+	private void ignoreRequest(Statement stmt, String requestor)
+	{
+		try
+		{
+			stmt.executeUpdate("update friend_requests set checked = 'y' where femail='" + this.email + "' and email='" + requestor + "'");
+			System.out.println("Friend request ignored.");
+		}
+		catch (SQLException ex)
+		{
+			System.err.println("Could not update friend_requests: " + ex);
+		}
 	}
 
 	/**
@@ -595,165 +786,5 @@ public class UserPage {
 	private void inbox(Statement s){
 
 	}
-
-
-	/**
-	 * Function:
-	 * Check for new friend requests and accept, reject, or ignore these requests.
-	 *
-	 * Param:
-	 * stmt - Statement object to execute sql statements on.
-	 *
-	 * Return:
-	 * None.
-	 *
-	 * schwehr 20100310
-	 */
-	private void checkFreqests(Statement stmt) throws SQLException
-	{
-		ResultSet rs = stmt.executeQuery("select f.* from users u,friend_requests f where u.email = '" + this.email + "' and u.email = f.femail");
-
-		System.out.println();
-		while (rs.next())
-		{
-			if (rs.getString("checked").toLowerCase().toCharArray()[0] == 'n')
-			{
-				String friend = rs.getString("email");
-				System.out.println("You have a friend request from: " + friend);
-
-				char ans[];
-				do
-				{
-					System.out.print("Accept or ignore? (Y[es] or N[o] or I[gnore]): ");
-					ans = Keyboard.in.readString().toLowerCase().toCharArray();
-					System.out.println(ans[0]);
-				} while( !(ans.length == 1 && (ans[0] == 'y' || ans[0] == 'n' || ans[0] == 'i')));
-
-				if (ans[0] == 'y')
-				{
-					this.addFriend(stmt, friend);
-				}
-				else if (ans[0] == 'n')
-				{
-					this.rejectFriend(stmt, friend);
-				}
-				else if (ans[0] == 'i')
-				{
-					this.ignoreRequest(stmt, friend);
-				}
-			}
-		}
-	}
-
-	/**
-	 * Function:
-	 * Accept a friend request. Insert into friends table. Send a message to the friend declaring
-	 * friendship. Remove the friend_requests record.
-	 *
-	 * Param:
-	 * stmt - Statement object to execute sql statements on.
-	 * requestor - the user requesting friendship.
-	 *
-	 * Return:
-	 * None.
-	 *
-	 * schwehr 20100310
-	 */
-	private void addFriend(Statement stmt, String requestor)
-	{
-		try
-		{
-			int mid;
-			ResultSet rset = stmt.executeQuery("select max(mid) from messages");
-			if (!rset.next())
-			{
-				System.out.println("Could not get mid.");
-				return;
-			}
-			else
-			{
-				mid = rset.getInt(1);
-			}
-
-			stmt.executeUpdate("insert into friends values ('" + requestor + "', '" + this.email + "')");
-			stmt.executeUpdate("insert into friends values ('" + this.email + "', '" + requestor + "')");
-			stmt.executeUpdate("insert into messages values (" + mid + ",sysdate,'I have accepted your friend request!','" + this.email + "')");
-			stmt.executeUpdate("insert into receives values (" + mid + ",'" + requestor + "')");
-			stmt.executeUpdate("delete from friend_requests where femail='" + this.email + "' and email='" + requestor +"'");
-			System.out.println("Friend request accepted.");
-		}
-		catch(SQLException ex)
-		{
-			System.err.println("Could not add friend: " + ex);
-		}
-	}
-
-	/**
-	 * Function:
-	 * Reject a friend request. Send a message of rejection.
-	 * Remove the friend_requests record.
-	 *
-	 * Param:
-	 * stmt - Statement object to execute sql statements on.
-	 * requestor - the user requesting friendship.
-	 *
-	 * Return:
-	 * None.
-	 *
-	 * schwehr 20100310
-	 */
-	private void rejectFriend(Statement stmt, String requestor)
-	{
-		try
-		{
-			int mid;
-			ResultSet rset = stmt.executeQuery("select max(mid) from messages");
-			if (!rset.next())
-			{
-				System.out.println("Could not get mid.");
-				return;
-			}
-			else
-			{
-				mid = rset.getInt(1);
-			}
-
-			stmt.executeUpdate("insert into messages values (" + mid + ",sysdate,'I have rejected your friend request!','" + this.email + "')");
-			stmt.executeUpdate("insert into receives values (" + mid + ",'" + requestor + "')");
-			stmt.executeUpdate("delete from friend_requests where femail='"+ this.email + "' and email='" + requestor + "'");
-			System.out.println("Friend request rejected.");
-		}
-		catch (SQLException ex)
-		{
-			System.err.println("Could not reject friend: " + ex);
-		}
-	}
-
-	/**
-	 * Function:
-	 * Ignore a friend request. Update the friend_requests record and mark as checked.
-	 *
-	 * Param:
-	 * stmt - Statement object to execute sql statements on.
-	 * requestor - the user requesting friendship.
-	 *
-	 * Return:
-	 * None.
-	 *
-	 * schwehr 20100310
-	 */
-	private void ignoreRequest(Statement stmt, String requestor)
-	{
-		try
-		{
-			stmt.executeUpdate("update friend_requests set checked = 'y' where femail='" + this.email + "' and email='" + requestor + "'");
-			System.out.println("Friend request ignored.");
-		}
-		catch (SQLException ex)
-		{
-			System.err.println("Could not update friend_requests: " + ex);
-		}
-	}
-
 
 }
