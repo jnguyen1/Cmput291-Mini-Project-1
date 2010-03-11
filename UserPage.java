@@ -398,6 +398,7 @@ public class UserPage {
 	 * schwehr 20100310
 	 */
 	private void postStatus(Statement stmt){
+		String status, query;
 		int sno;
 		try
 		{
@@ -417,15 +418,18 @@ public class UserPage {
 			return;
 		}
 			
-		System.out.print("Status: ");
-		String status = Keyboard.in.readString();
+		do
+		{
+			System.out.print("Enter Status (max 40 chars.): ");
+			status = Keyboard.in.readString();
+		} while(status.length() >40);
 
-		String str = "insert into status values ('"+email+"',"+sno+",'"+status+"',sysdate)";
+		query = "insert into status values ('" + this.email + "'," + sno + ",'" + status + "',sysdate)";
 		System.out.println(status);
 
 		try
 		{
-			stmt.executeUpdate(str);
+			stmt.executeUpdate(query);
 			System.out.println("Status posted successfully!");
 		}
 		catch(SQLException ex)
@@ -470,16 +474,53 @@ public class UserPage {
 			}
 		}
 
+		recipientList = this.getValidUsers(stmt, recipientList);
+
 		// No users to send to, no message needed.
 		if (recipientList.size() == 0)
 		{
 			return;
 		}
 
-		System.out.println("Enter your message, followed by newline.");
-		message = Keyboard.in.readString();
+		do
+		{
+			System.out.println("Enter your message (max 40 chars.), followed by newline.");
+			message = Keyboard.in.readString();
+		} while(message.length() > 40);
 
 		this.sendMessageSql(stmt, recipientList, message);
+	}
+
+	/**
+	 * Function:
+	 * Finds the users from the list that are valid users in the users table.
+	 * 
+	 * Param:
+	 * stmt - Statement object to execute sql statements on.
+	 * users - a list of users that need to be verified.
+	 *
+	 * Return:
+	 * A new list of users that have a match in the table.
+	 *
+	 * jnguyen1 20100311
+	 */
+	private Vector<String> getValidUsers(Statement stmt, Vector<String> users)
+	{
+		Vector<String> validUsers = new Vector();
+
+		String query = "select email from users where email = '" + users.get(0) + "'";
+		for (int i=1; i<users.length(); i++)
+		{
+			query = query.concat(" or email = '" + users.get(i) + "'";
+		}
+
+		ResultSet rset = stmt.executeQuery(query);
+		while (rset.next())
+		{
+			validUsers.add(rset.getString("email"));
+		}
+
+		return validUsers;
 	}
 
 	/**
@@ -504,7 +545,7 @@ public class UserPage {
 			int messageId = stmt.executeQuery("select max(mid) from messages").getInt(1);
 
 			// Insert into messages table.
-			stmt.executeUpdate("insert into messages values('" + Integer.toString(messageId) + "', current_date, '" + content + "', '" + this.email + "')");
+			stmt.executeUpdate("insert into messages values('" + messageId + "', current_date, '" + content + "', '" + this.email + "')");
 
 			Iterator itr = recipientList.iterator();
 			while (itr.hasNext())
@@ -535,7 +576,7 @@ public class UserPage {
 	{
 		try
 		{
-			stmt.executeUpdate("insert into receives values('" + Integer.toString(messageId) + "', '" + recipient + "')");
+			stmt.executeUpdate("insert into receives values('" + messageId + "', '" + recipient + "')");
 		}
 		catch (SQLException e)
 		{
