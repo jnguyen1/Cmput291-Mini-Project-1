@@ -418,6 +418,8 @@ public class UserPage {
 
 			String query = String.format("insert into friend_requests values('%s', '%s', 'N')", this.email, friend);
 			stmt.executeUpdate(query);
+
+			System.out.println("Request sent!");
 		}
 		catch (SQLException e)
 		{
