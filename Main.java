@@ -165,6 +165,14 @@ public class Main {
 			email = Keyboard.in.readString();
 		} while (email.length() > 25 || email.length() == 0);
 
+		ResultSet rset = stmt.executeQuery("select * from users where email = '" + email + "'");
+		rset.last();
+		if (rset.getRow() != 0)
+		{
+			System.out.println("User exists already. Cannot register another user with the same email.")
+			return;
+		}
+
 		do
 		{
 			System.out.print("Enter your (full) name (0-16 char): ");
