@@ -3,7 +3,6 @@ import java.util.*;
 
 public class UserPage {
 
-	static String user;
 	private String email;
 	Statement stmt;
 	static String friend = new String();
@@ -35,16 +34,17 @@ public class UserPage {
 
 	static boolean loggedOn = true;
 	public void startUp() throws SQLException{
+		String name = "";
 		String createString = "select name from users where email = '"+email+"'";
 
-		ResultSet rs = this.stmt.executeQuery(createString);
+		ResultSet rset = this.stmt.executeQuery(createString);
 
-		if(rs.next())
-			user = rs.getString("name").trim();
+		if(rset.next())
+			name = rset.getString("name").trim();
 
 
 		System.out.println();
-		System.out.println("Welcome "+user+". Here are your options for today.");
+		System.out.println("Welcome " + name +". Here are your options for today.");
 		//if there are notifications, show them first then menu
 
 		if(this.checkFreqests(this.stmt, friend, friends));
@@ -237,7 +237,7 @@ public class UserPage {
 			{
 				try
 				{
-					stmt.executeUpdate("insert into fans values('" + Main.user + "', '" + results.get(choice).getPid() + "', current_date)");
+					stmt.executeUpdate("insert into fans values('" + this.email + "', '" + results.get(choice).getPid() + "', current_date)");
 				}
 				catch (SQLException e)
 				{
@@ -488,7 +488,7 @@ public class UserPage {
 			int messageId = stmt.executeQuery("select max(mid) from messages").getInt(1);
 
 			// Insert into messages table.
-			stmt.executeUpdate("insert into messages values('" + Integer.toString(messageId) + "', current_date, '" + content + "', '" + Main.user + "')");
+			stmt.executeUpdate("insert into messages values('" + Integer.toString(messageId) + "', current_date, '" + content + "', '" + this.email + "')");
 
 			Iterator itr = recipientList.iterator();
 			while (itr.hasNext())

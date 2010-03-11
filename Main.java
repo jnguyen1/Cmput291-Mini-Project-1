@@ -126,7 +126,7 @@ public class Main {
 
 			// There should only be one record found if the credentials are valid..
 			rset.last();
-			if (rs.getRow() == 1)
+			if (rset.getRow() == 1)
 			{
 				return true;
 			}
