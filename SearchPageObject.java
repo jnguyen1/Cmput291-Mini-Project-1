@@ -97,7 +97,7 @@ public class SearchPageObject implements Comparable<SearchPageObject>
 		String stringPattern = keywords.get(0);
 		for (int i=1; i<keywords.size(); i++)
 		{
-			stringPattern.concat("|" + keywords.get(i));
+			stringPattern = stringPattern.concat("|" + keywords.get(i));
 		}
 
 		Pattern pattern = Pattern.compile(stringPattern);

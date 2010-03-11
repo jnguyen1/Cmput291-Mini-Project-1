@@ -57,11 +57,14 @@ public class UserPage {
 	 * Return:
 	 * None.
 	 *
+	 * Exceptions:
+	 * SQLException caused by executeQuery.
+	 *
 	 * jnguyen1 20100307
 	 */
 	private void searchPages(Statement stmt) throws SQLException
 	{
-		Vector<String> keywords = this.getSearchPagesKeywords();
+		Vector<String> keywords = this.getKeywords();
 		if (keywords.size() == 0)
 		{
 			System.out.println("No word to search.");
@@ -70,13 +73,13 @@ public class UserPage {
 
 		Vector<SearchPageObject> results = new Vector<SearchPageObject>();
 
-		String condition = "title like '" + keywords.get(0) + "' or content like '" + keywords.get(0) + "'";
+		String condition = "title like '%" + keywords.get(0) + "%' or content like '%" + keywords.get(0) + "%'";
 		for (int i=1; i<keywords.size(); i++)
 		{
-			condition.concat(" or title like '" + keywords.get(i) + "' or content like '" + keywords.get(i) + "'");
+			condition = condition.concat(" or title like '%" + keywords.get(i) + "%' or content like '%" + keywords.get(i) + "%'");
 		}
 
-		ResultSet rset = stmt.executeQuery("select * from pages where " + condition + ";"); 
+		ResultSet rset = stmt.executeQuery("select * from pages where " + condition); 
 
 		while(rset.next())
 		{ 
@@ -92,7 +95,15 @@ public class UserPage {
 			results.add(spo);
 		} 
 
+		rset.last();
+		if (rset.getRow() == 0)
+		{
+			System.out.println("No page found that matches keywords.");
+			return;
+		}
+
 		Collections.sort(results);
+		Collections.reverse(results);
 
 		for (int i=0; i<results.size(); i++)
 		{
@@ -109,22 +120,31 @@ public class UserPage {
 
 			switch (menuChoice)
 			{
-				case 0:
+				case 1:
 					fanPageRequest(stmt, results);
 					menuLoop = false;
 					break;
-				case 1:
+				case 2:
 					menuLoop = false;
 					break;
 				default:
 					break;
 			}
 		}
-
-		stmt.close(); 
 	}
 
-	private Vector<String> getSearchPagesKeywords()
+	/**
+	 * Function:
+	 * Gets a list of keywords.
+	 *
+	 * Param:
+	 *
+	 * Return:
+	 * Vector of strings that are the desired keywords.
+	 *
+	 * jnguyen1 20100309
+	 */
+	private Vector<String> getKeywords()
 	{
 		Vector<String> keywords = new Vector<String>();
 		String word;
@@ -175,7 +195,7 @@ public class UserPage {
 			{
 				try
 				{
-					stmt.executeUpdate("insert into fans values('" + Main.user + "', '" + results.get(choice)  + "', current_date)");
+					stmt.executeUpdate("insert into fans values('" + Main.user + "', '" + results.get(choice).getPid() + "', current_date)");
 				}
 				catch (SQLException e)
 				{
@@ -185,6 +205,130 @@ public class UserPage {
 				return;
 			}
 		}
+	}
+
+	/*
+	 * Function:
+	 * Searches through pages table for records whose title or content contains the supplied keywords.
+	 * Display the results in a sorted order that places greater weighting on matches on title (T*2+C).
+	 *
+	 * Param:
+	 * stmt - the Statement object to execute statements on.
+	 *
+	 * Return:
+	 * None.
+	 *
+	 * Exceptions:
+	 * SQLException caused by executeQuery.
+	 *
+	 * jnguyen1 20100307
+	 */
+	private void searchUsers(Statement stmt) throws SQLException
+	{
+		// Only "a" keyword when searching for users.
+		//Vector<String> keywords = this.getKeywords();
+		Vector<String> keywords = new Vector<String>();
+		System.out.println("Enter the keyword to search users.");
+		keywords.add(Keyboard.in.readString());
+
+		if (keywords.size() == 0)
+		{
+			System.out.println("No word to search.");
+			return;
+		}
+
+		String condition = "name like '%" + keywords.get(0) + "%' or email like '%" + keywords.get(0) + "%'";
+		for (int i=1; i<keywords.size(); i++)
+		{
+			condition = condition.concat(" or name like '%" + keywords.get(i) + "%' or email like '%" + keywords.get(i) + "%'");
+		}
+
+		ResultSet rset = stmt.executeQuery("select email, name, city, gender from users where " + condition); 
+
+		while(rset.next())
+		{ 
+			System.out.format("%3d %20s %20s %20s\n", rset.getRow(), rset.getString("email"),
+					rset.getString("name"),
+					rset.getString("city"),
+					rset.getString("gender")
+					);
+		} 
+
+		rset.last();
+		if (rset.getRow() == 0)
+		{
+			System.out.println("No users that matched keyword search.");
+			return;
+		}
+
+		while (true)
+		{
+			System.out.println("Select user number to request additional stats. -1 to cancel.");
+			int menuChoice = Keyboard.in.readInteger();
+			if (menuChoice == -1)
+			{
+				break;
+			}
+			else
+			{
+				// Request user stat if we can move to selected entry from rset.
+				if(rset.absolute(menuChoice))
+				{
+					try
+					{
+						this.requestUserStat(stmt, rset.getString("email"));
+					}
+					catch (SQLException e)
+					{
+						System.out.println("Could not request user stats.");
+					}
+				}
+
+				// We are not looping. But infrastructure is here.
+				break;
+			}
+		}
+	}
+
+	/**
+	 * Function:
+	 * Gather and print additional stats related to user.
+	 *
+	 * Param:
+	 * stmt - the Statement object to execute statements on.
+	 * email - the user to get the stats of.
+	 *
+	 * Return:
+	 * None.
+	 *
+	 * jnguyen1 20100309
+	 */
+	private void requestUserStat(Statement stmt, String email) throws SQLException
+	{
+		ResultSet rset = null;
+		String friendCount, statusCount, commentCount, messageCount;
+
+		rset = stmt.executeQuery("select count(*) from friends where email = '" + email + "'");
+		rset.first();
+		friendCount = rset.getString(1);
+
+		rset = stmt.executeQuery("select count(*) from status where email = '" + email + "'");
+		rset.first();
+		statusCount = rset.getString(1);
+
+		rset = stmt.executeQuery("select count(*) from comments where email = '" + email + "'");
+		rset.first();
+		commentCount = rset.getString(1);
+
+		rset = stmt.executeQuery("select count(*) from messages where sender = '" + email + "'");
+		rset.first();
+		messageCount = rset.getString(1);
+
+		System.out.println("The user '" + email + "' has the following stats.");
+		System.out.println(friendCount + " number of friends.");
+		System.out.println(statusCount + " number of status postings.");
+		System.out.println(commentCount + " number of comments made.");
+		System.out.println(messageCount + " number of messages sent.");
 	}
 
 	/**
