@@ -243,7 +243,7 @@ public class UserPage {
 				try
 				{
 					stmt.executeUpdate("insert into fans values('" + this.email + "', '" + results.get(choice).getPid() + "', current_date)");
-					System.out.println("You became a fan of " + results.getTitle());
+					System.out.println("You became a fan of " + results.get(choice).getTitle());
 				}
 				catch (SQLException e)
 				{
