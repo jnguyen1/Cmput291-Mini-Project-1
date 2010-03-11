@@ -76,7 +76,7 @@ public class UserPage {
 		String condition = "title like '%" + keywords.get(0) + "%' or content like '%" + keywords.get(0) + "%'";
 		for (int i=1; i<keywords.size(); i++)
 		{
-			condition.concat(" or title like '%" + keywords.get(i) + "%' or content like '%" + keywords.get(i) + "%'");
+			condition = condition.concat(" or title like '%" + keywords.get(i) + "%' or content like '%" + keywords.get(i) + "%'");
 		}
 
 		ResultSet rset = stmt.executeQuery("select * from pages where " + condition); 
@@ -95,7 +95,15 @@ public class UserPage {
 			results.add(spo);
 		} 
 
+		rset.last();
+		if (rset.getRow() == 0)
+		{
+			System.out.println("No page found that matches keywords.");
+			return;
+		}
+
 		Collections.sort(results);
+		Collections.reverse(results);
 
 		for (int i=0; i<results.size(); i++)
 		{
@@ -112,11 +120,11 @@ public class UserPage {
 
 			switch (menuChoice)
 			{
-				case 0:
+				case 1:
 					fanPageRequest(stmt, results);
 					menuLoop = false;
 					break;
-				case 1:
+				case 2:
 					menuLoop = false;
 					break;
 				default:
@@ -187,7 +195,7 @@ public class UserPage {
 			{
 				try
 				{
-					stmt.executeUpdate("insert into fans values('" + Main.user + "', '" + results.get(choice)  + "', current_date)");
+					stmt.executeUpdate("insert into fans values('" + Main.user + "', '" + results.get(choice).getPid() + "', current_date)");
 				}
 				catch (SQLException e)
 				{
@@ -229,10 +237,10 @@ public class UserPage {
 			return;
 		}
 
-		String condition = "lower(name) like '%" + keywords.get(0).toLowerCase() + "%' or lower(email) like '%" + keywords.get(0).toLowerCase() + "%'";
+		String condition = "name like '%" + keywords.get(0) + "%' or email like '%" + keywords.get(0) + "%'";
 		for (int i=1; i<keywords.size(); i++)
 		{
-			condition.concat(" or lower(name) like '%" + keywords.get(i).toLowerCase() + "%' or lower(email) like '%" + keywords.get(i).toLowerCase() + "%'");
+			condition = condition.concat(" or name like '%" + keywords.get(i) + "%' or email like '%" + keywords.get(i) + "%'");
 		}
 
 		ResultSet rset = stmt.executeQuery("select email, name, city, gender from users where " + condition); 
