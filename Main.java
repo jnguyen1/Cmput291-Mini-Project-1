@@ -9,7 +9,6 @@ public class Main {
 	static String m_password = "urarurar12";
 
 	static Connection m_con;
-	static Statement stmt;
 
 	static String user;
 
@@ -23,6 +22,7 @@ public class Main {
 			DriverManager.registerDriver((Driver)
 					drvClass.newInstance());
 			m_con = DriverManager.getConnection(m_url, m_userName, m_password);
+			Statement stmt = m_con.createStatement(ResultSet.TYPE_SCROLL_INSENSTIVE, ResultSet.CONCUR_UPDATABLE);
 
 			System.out.println();
 			System.out.println("Welcome! Please log in with your e-mail and password or choose the next option " +
@@ -41,7 +41,7 @@ public class Main {
 
 				switch(input){
 					case 1:
-						if(login()){
+						if(login(stmt)){
 							System.out.println("Login successful... Please wait to be directed to the user screen.");
 							UserPage nUser = new UserPage(user);
 							nUser.startUp();
@@ -50,7 +50,7 @@ public class Main {
 							System.out.println("Username or password is wrong. Please try again.");
 						break;
 					case 2:
-						register();
+						register(stmt);
 						break;
 					case 3:
 						menu = false;
@@ -74,6 +74,7 @@ public class Main {
 		{
 			try
 			{
+				stmt.close();
 				m_con.close();
 			}
 			catch (SQLException e)
@@ -83,7 +84,7 @@ public class Main {
 		}
 	}
 
-	public static boolean login(){
+	public static boolean login(Statement stmt){
 
 		String pass;
 
@@ -113,7 +114,7 @@ public class Main {
 		}
 	}
 
-	public static void register(){
+	public static void register(Statement stmt){
 		String email, name, city, pass, pass2; 
 		char[] gender;
 

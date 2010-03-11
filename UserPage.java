@@ -4,19 +4,33 @@ import java.util.*;
 public class UserPage {
 
 	static String user;
-	static String email;
+	private String email;
+	Statement stmt;
 	static String friend = new String();
 	static String friends[] = new String[25];
 
-	public UserPage(String e){
-		email = e;
+	public UserPage(Connection conn, String email){
+		this.email = email;
+		this.stmt = conn.createStatement(ResultSet.TYPE_SCROLL_INSENSTIVE, ResultSet.CONCUR_UPDATABLE);
+	}
+
+	/**
+	 * Destructor.
+	 * Close statement.
+	 *
+	 * jnguyen1 20100311
+	 */
+	protected void finalize()
+	{
+		this.stmt.close();
+		super.finalize();
 	}
 
 	static boolean loggedOn = true;
 	public void startUp() throws SQLException{
 		String createString = "select name from users where email = '"+email+"'";
 
-		ResultSet rs = Main.stmt.executeQuery(createString);
+		ResultSet rs = this.stmt.executeQuery(createString);
 
 		if(rs.next())
 			user = rs.getString("name").trim();
@@ -26,7 +40,7 @@ public class UserPage {
 		System.out.println("Welcome "+user+". Here are your options for today.");
 		//if there are notifications, show them first then menu
 
-		if(this.checkFreqests(Main.stmt, friend, friends));
+		if(this.checkFreqests(this.stmt, friend, friends));
 		// TODO: This is a weird conditional.
 
 		String in;
@@ -47,28 +61,28 @@ public class UserPage {
 
 			switch(input){
 				case 1:
-					this.searchPages(Main.stmt);
+					this.searchPages(this.stmt);
 					break;
 				case 2:
 					System.out.print("Search user: ");
 					in = Keyboard.in.readString();
-					this.searchUser(Main.stmt, in);
+					this.searchUser(this.stmt, in);
 					break;
 				case 3:
-					this.sendFriendRequest(Main.stmt);
+					this.sendFriendRequest(this.stmt);
 				case 4:
 					System.out.print("Status: ");
 					in = Keyboard.in.readString();
-					this.postStatus(Main.stmt, in);
+					this.postStatus(this.stmt, in);
 					break;
 				case 5:
-					this.fstatus(Main.stmt);
+					this.fstatus(this.stmt);
 					break;
 				case 6:
-					this.sendMessage(Main.stmt);
+					this.sendMessage(this.stmt);
 					break;
 				case 7:
-					this.inbox(Main.stmt);
+					this.inbox(this.stmt);
 					break;
 				case 8:
 					run = false;
@@ -352,7 +366,7 @@ public class UserPage {
 		System.out.println(messageCount + " number of messages sent.");
 	}
 
-	private void searchUser(Statement s, String name) throws SQLException{
+	private void searchUser(Statement stmt, String name) throws SQLException{
 		String strArr[] = name.split(" ");
 		String condition = "name like '%" + strArr[0] + "%' or email like '%" + strArr[0] + "%'";
 		for (int i=1; i<strArr.length; i++)
@@ -362,7 +376,7 @@ public class UserPage {
 
 		String str = "select * from users where "+condition;
 
-		ResultSet rs = s.executeQuery(str);
+		ResultSet rs = stmt.executeQuery(str);
 
 		if(rs == null)//rs can't be null... find some way to put if output is empty
 			System.out.println("Sorry, that user does not exist. If you are looking for a name, try captailizing the first letter of the name you are looking for.");
@@ -378,13 +392,13 @@ public class UserPage {
 	}
 
 	static int sno = 0;
-	private void postStatus(Statement s, String status){
+	private void postStatus(Statement stmt, String status){
 		sno++;
 		String str = "insert into status values ('"+email+"',"+sno+",'"+status+"',sysdate)";
 		System.out.println(status);
 
 		try{
-			s.executeUpdate(str);
+			stmt.executeUpdate(str);
 
 			System.out.println("Status posted successfully!");
 		}
@@ -397,7 +411,7 @@ public class UserPage {
 
 	}
 
-	private void fstatus(Statement s){
+	private void fstatus(Statement stmt){
 		//john is working on this
 	}
 
@@ -512,8 +526,8 @@ public class UserPage {
 	}
 
 
-	private boolean checkFreqests(Statement s, String fri, String[] fris) throws SQLException{
-		ResultSet rs = s.executeQuery("select f.* from users u,friend_requests f where u.email = '"+email+"' and u.email = f.femail");
+	private boolean checkFreqests(Statement stmt, String fri, String[] fris) throws SQLException{
+		ResultSet rs = stmt.executeQuery("select f.* from users u,friend_requests f where u.email = '"+email+"' and u.email = f.femail");
 
 
 		System.out.println();
@@ -529,15 +543,15 @@ public class UserPage {
 					System.out.println(ans[0]);
 				} while( !(ans.length == 1 && (ans[0] == 'y' || ans[0] == 'n' || ans[0] == 'i')));
 				if(ans[0] == 'y')
-					this.addFriend(friend,email,Main.stmt);
+					this.addFriend(friend,email, stmt);
 				else if(ans[0] == 'n')
-					this.rejectFriend(friend,email,Main.stmt);
+					this.rejectFriend(friend,email, stmt);
 				else if(ans[0] == 'i')
-					this.ignoreRequest(friend,email,Main.stmt);
+					this.ignoreRequest(friend,email, stmt);
 			}
 
 		}
-		rs = s.executeQuery("select f.* from users u,friend_requests f where u.email = '"+email+"' and u.email = f.femail");
+		rs = stmt.executeQuery("select f.* from users u,friend_requests f where u.email = '"+email+"' and u.email = f.femail");
 
 		if(rs.next()){
 			return true;
@@ -550,35 +564,35 @@ public class UserPage {
 	 * parameters for the next 3 methods:
 	 * str1 = femail (inviter)
 	 * str2 = email (invitee)
-	 * s = Main.stmt
+	 * stmt = Main.stmt
 	 */
-	private void addFriend(String str1, String str2, Statement s){
+	private void addFriend(String str1, String str2, Statement stmt){
 		try{
-			s.executeUpdate("insert into friends values ('"+str1+"', '"+str2+"')");
-			s.executeUpdate("insert into friends values ('"+str2+"', '"+str1+"')");
-			s.executeUpdate("insert into messages values ('1',sysdate,'I have accepted your friend request!','"+str2+"')");
-			s.executeUpdate("insert into receives values ('1','"+str1+"')");
-			s.executeUpdate("delete from friend_requests where femail='"+str1+"' and email='"+str2+"'");
+			stmt.executeUpdate("insert into friends values ('"+str1+"', '"+str2+"')");
+			stmt.executeUpdate("insert into friends values ('"+str2+"', '"+str1+"')");
+			stmt.executeUpdate("insert into messages values ('1',sysdate,'I have accepted your friend request!','"+str2+"')");
+			stmt.executeUpdate("insert into receives values ('1','"+str1+"')");
+			stmt.executeUpdate("delete from friend_requests where femail='"+str1+"' and email='"+str2+"'");
 			System.out.println("Friend request accepted.");
 		} catch(SQLException ex){
 			System.err.println("SQLException: " + ex);
 		}
 	}
 
-	private void rejectFriend(String str1, String str2, Statement s){
+	private void rejectFriend(String str1, String str2, Statement stmt){
 		try{
-			s.executeUpdate("insert into messages values ('1',sysdate,'I have rejected your friend request!','"+str2+"')");
-			s.executeUpdate("insert into receives values ('1','"+str1+"')");
-			s.executeUpdate("delete from friend_requests where femail='"+str1+"' and email='"+str2+"'");
+			stmt.executeUpdate("insert into messages values ('1',sysdate,'I have rejected your friend request!','"+str2+"')");
+			stmt.executeUpdate("insert into receives values ('1','"+str1+"')");
+			stmt.executeUpdate("delete from friend_requests where femail='"+str1+"' and email='"+str2+"'");
 			System.out.println("Friend request rejected.");
 		} catch(SQLException ex){
 			System.err.println("SQLException: " + ex);
 		}
 	}
 
-	private void ignoreRequest(String str1, String str2, Statement s){
+	private void ignoreRequest(String str1, String str2, Statement stmt){
 		try{
-			s.executeUpdate("update friend_requests set checked = 'y' where femail='"+str1+"' and email='"+str2+"'");
+			stmt.executeUpdate("update friend_requests set checked = 'y' where femail='"+str1+"' and email='"+str2+"'");
 			System.out.println("Friend request ignored.");
 		} catch(SQLException ex){
 			System.err.println("SQLException: " + ex);
