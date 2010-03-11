@@ -5,8 +5,8 @@ public class Main {
 	private static String m_url = "jdbc:oracle:thin:@gwynne.cs.ualberta.ca:1521:CRS";
 	private static String m_driverName = "oracle.jdbc.driver.OracleDriver";
 
-	private static String m_userName = "schwehr";
-	private static String m_password = "urarurar12";
+	private static String m_userName = "user";
+	private static String m_password = "login";
 
 	private static Connection m_con;
 	private static Statement stmt;
@@ -53,9 +53,11 @@ public class Main {
 				switch(input)
 				{
 					case 1:
-						if (login(stmt, Main.user))
+						if (login(stmt))
 						{
 							System.out.println("Login successful... Please wait to be directed to the user screen.");
+
+							// login() has initialized Main.user with a value.
 							UserPage nUser = new UserPage(m_con, Main.user);
 							nUser.startUp();
 						}
@@ -102,26 +104,25 @@ public class Main {
 	 *
 	 * Param:
 	 * stmt - Statement object to run select.
-	 * user - the name of the account to login to.
 	 *
 	 * Return:
 	 * True if the credentials are correct.
 	 *
 	 * schwehr 20100310
 	 */
-	private static boolean login(Statement stmt, String user)
+	private static boolean login(Statement stmt)
 	{
 		String pass;
 
 		System.out.print("E-mail: ");
-		user = Keyboard.in.readString();
+		Main.user = Keyboard.in.readString();
 
 		System.out.print("Password: ");
 		pass = Keyboard.in.readString();
 
 		try
 		{
-			String query = String.format("select email, pwd from users where email ='%s' and pwd ='%s'", user, pass);
+			String query = String.format("select email, pwd from users where email ='%s' and pwd ='%s'", Main.user, pass);
 			ResultSet rset = stmt.executeQuery(query);		
 
 			// There should only be one record found if the credentials are valid..

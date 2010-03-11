@@ -5,7 +5,6 @@ public class UserPage {
 
 	private String email;
 	private Statement stmt;
-	static String friends[] = new String[25];
 
 	public UserPage(Connection conn, String email) throws SQLException
 	{
@@ -47,7 +46,7 @@ public class UserPage {
 	public void startUp() throws SQLException
 	{
 		String name = "wondefully named character";
-		String createString = "select name from users where email = '"+email+"'";
+		String createString = "select name from users where email = '" + this.email + "'";
 
 		ResultSet rset = this.stmt.executeQuery(createString);
 		if(rset.next())
@@ -244,6 +243,7 @@ public class UserPage {
 				try
 				{
 					stmt.executeUpdate("insert into fans values('" + this.email + "', '" + results.get(choice).getPid() + "', current_date)");
+					System.out.println("You became a fan of " + results.getTitle());
 				}
 				catch (SQLException e)
 				{
@@ -508,16 +508,23 @@ public class UserPage {
 	{
 		Vector<String> validUsers = new Vector();
 
-		String query = "select email from users where email = '" + users.get(0) + "'";
-		for (int i=1; i<users.length(); i++)
+		try
 		{
-			query = query.concat(" or email = '" + users.get(i) + "'";
-		}
+			String query = "select email from users where email = '" + users.get(0) + "'";
+			for (int i=1; i<users.size(); i++)
+			{
+				query = query.concat(" or email = '" + users.get(i) + "'");
+			}
 
-		ResultSet rset = stmt.executeQuery(query);
-		while (rset.next())
+			ResultSet rset = stmt.executeQuery(query);
+			while (rset.next())
+			{
+				validUsers.add(rset.getString("email"));
+			}
+		}
+		catch (SQLException e)
 		{
-			validUsers.add(rset.getString("email"));
+			System.out.println("No valid user in list.");
 		}
 
 		return validUsers;
