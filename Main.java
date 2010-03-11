@@ -5,8 +5,8 @@ public class Main {
 	private static String m_url = "jdbc:oracle:thin:@gwynne.cs.ualberta.ca:1521:CRS";
 	private static String m_driverName = "oracle.jdbc.driver.OracleDriver";
 
-	private static String m_userName = "jnguyen1";
-	private static String m_password = "123abc456";
+	private static String m_userName = "";
+	private static String m_password = "";
 
 	private static Connection m_con;
 	private static Statement stmt;
@@ -31,6 +31,13 @@ public class Main {
 		{
 			Class drvClass = Class.forName(m_driverName);
 			DriverManager.registerDriver( (Driver)drvClass.newInstance() );
+
+			System.out.println("Enter username to db:");
+			m_userName = Keyboard.in.readString();
+
+			System.out.println("Enter password to db:");
+			m_password = Keyboard.in.readString();
+
 			m_con = DriverManager.getConnection(m_url, m_userName, m_password);
 			stmt = m_con.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
 
