@@ -405,17 +405,24 @@ public class UserPage {
 		System.out.println("Enter email to send friend request to.");
 		String friend = Keyboard.in.readString();
 
-		ResultSet rset = stmt.executeQuery("select * from users where email = '" + friend + "'");
-
-		rset.last();
-		if (rset.getRow() != 1)
+		try
 		{
-			System.out.println("Your friend does not exist.");
-			return;
-		}
+			ResultSet rset = stmt.executeQuery("select * from users where email = '" + friend + "'");
 
-		String query = String.format("insert into friend_requests values('%s', '%s', 'N')", this.email, friend);
-		stmt.executeUpdate(query);
+			rset.last();
+			if (rset.getRow() != 1)
+			{
+				System.out.println("Your friend does not exist.");
+				return;
+			}
+
+			String query = String.format("insert into friend_requests values('%s', '%s', 'N')", this.email, friend);
+			stmt.executeUpdate(query);
+		}
+		catch (SQLException e)
+		{
+			System.out.println("Could not send friend request.");
+		}
 	}
 
 	/**
@@ -697,7 +704,7 @@ public class UserPage {
 	 */
 	private Vector<String> getValidUsers(Statement stmt, Vector<String> users)
 	{
-		Vector<String> validUsers = new Vector();
+		Vector<String> validUsers = new Vector<String>();
 
 		try
 		{

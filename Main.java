@@ -5,8 +5,8 @@ public class Main {
 	private static String m_url = "jdbc:oracle:thin:@gwynne.cs.ualberta.ca:1521:CRS";
 	private static String m_driverName = "oracle.jdbc.driver.OracleDriver";
 
-	private static String m_userName = "user";
-	private static String m_password = "login";
+	private static String m_userName = "jnguyen1";
+	private static String m_password = "123abc456";
 
 	private static Connection m_con;
 	private static Statement stmt;
@@ -165,12 +165,19 @@ public class Main {
 			email = Keyboard.in.readString();
 		} while (email.length() > 25 || email.length() == 0);
 
-		ResultSet rset = stmt.executeQuery("select * from users where email = '" + email + "'");
-		rset.last();
-		if (rset.getRow() != 0)
+		try
 		{
-			System.out.println("User exists already. Cannot register another user with the same email.")
-			return;
+			ResultSet rset = stmt.executeQuery("select * from users where email = '" + email + "'");
+			rset.last();
+			if (rset.getRow() != 0)
+			{
+				System.out.println("User exists already. Cannot register another user with the same email.");
+				return;
+			}
+		}
+		catch (SQLException e)
+		{
+			System.out.println("Error checking unique identity during registration.");
 		}
 
 		do
