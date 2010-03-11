@@ -4,7 +4,6 @@ import java.util.*;
 public class UserPage {
 
 	static String user;
-	static String createString;
 	static String email;
 	static String friend = new String();
 	static String friends[] = new String[25];
@@ -15,7 +14,7 @@ public class UserPage {
 
 	static boolean loggedOn = true;
 	public void startUp() throws SQLException{
-		createString = "select name from users where email = '"+email+"'";
+		String createString = "select name from users where email = '"+email+"'";
 
 		ResultSet rs = Main.stmt.executeQuery(createString);
 
@@ -27,7 +26,7 @@ public class UserPage {
 		System.out.println("Welcome "+user+". Here are your options for today.");
 		//if there are notifications, show them first then menu
 
-		if(this.checkFreqests(Main.m_con,Main.stmt, friend, friends));
+		if(this.checkFreqests(Main.stmt, friend, friends));
 		// TODO: This is a weird conditional.
 
 		String in;
@@ -53,23 +52,23 @@ public class UserPage {
 				case 2:
 					System.out.print("Search user: ");
 					in = Keyboard.in.readString();
-					this.searchUser(Main.m_con, Main.stmt, in);
+					this.searchUser(Main.stmt, in);
 					break;
 				case 3:
 					this.sendFriendRequest(Main.stmt);
 				case 4:
 					System.out.print("Status: ");
 					in = Keyboard.in.readString();
-					this.postStatus(Main.m_con, Main.stmt, in);
+					this.postStatus(Main.stmt, in);
 					break;
 				case 5:
-					this.fstatus(Main.m_con, Main.stmt);
+					this.fstatus(Main.stmt);
 					break;
 				case 6:
 					this.sendMessage(Main.stmt);
 					break;
 				case 7:
-					this.inbox(Main.m_con, Main.stmt);
+					this.inbox(Main.stmt);
 					break;
 				case 8:
 					run = false;
@@ -186,23 +185,6 @@ public class UserPage {
 
 		Vector<String> keywords = new Vector<String>(Arrays.asList(input));
 		return keywords;
-		//		String word;
-		//
-		//		System.out.println("Enter keywords to search title and content for. Newline to finish list.");
-		//		while (true)
-		//		{
-		//			word = Keyboard.in.readString();
-		//			if (word.length() == 0)
-		//			{
-		//				break;
-		//			}
-		//			else
-		//			{
-		//				keywords.add(word);
-		//			}
-		//		}
-		//
-		//		return keywords;
 	}
 
 	/**
@@ -370,7 +352,7 @@ public class UserPage {
 		System.out.println(messageCount + " number of messages sent.");
 	}
 
-	private void searchUser(Connection conn, Statement s, String name) throws SQLException{
+	private void searchUser(Statement s, String name) throws SQLException{
 		String strArr[] = name.split(" ");
 		String condition = "name like '%" + strArr[0] + "%' or email like '%" + strArr[0] + "%'";
 		for (int i=1; i<strArr.length; i++)
@@ -396,7 +378,7 @@ public class UserPage {
 	}
 
 	static int sno = 0;
-	private void postStatus(Connection conn, Statement s, String status){
+	private void postStatus(Statement s, String status){
 		sno++;
 		String str = "insert into status values ('"+email+"',"+sno+",'"+status+"',sysdate)";
 		System.out.println(status);
@@ -415,7 +397,7 @@ public class UserPage {
 
 	}
 
-	private void fstatus(Connection conn, Statement s){
+	private void fstatus(Statement s){
 		//john is working on this
 	}
 
@@ -525,12 +507,12 @@ public class UserPage {
 		}
 	}
 
-	private void inbox(Connection conn, Statement s){
+	private void inbox(Statement s){
 
 	}
 
 
-	private boolean checkFreqests(Connection conn, Statement s, String fri, String[] fris) throws SQLException{
+	private boolean checkFreqests(Statement s, String fri, String[] fris) throws SQLException{
 		ResultSet rs = s.executeQuery("select f.* from users u,friend_requests f where u.email = '"+email+"' and u.email = f.femail");
 
 

@@ -2,10 +2,6 @@ import java.sql.*;
 
 public class Main {
 
-	/**
-	 * @param args
-	 */
-
 	static String m_url = "jdbc:oracle:thin:@gwynne.cs.ualberta.ca:1521:CRS";
 	static String m_driverName = "oracle.jdbc.driver.OracleDriver";
 
@@ -13,10 +9,8 @@ public class Main {
 	static String m_password = "urarurar12";
 
 	static Connection m_con;
-
 	static Statement stmt;
 
-	static String createString;
 	static String user;
 
 	public static void main(String[] args) {
@@ -99,7 +93,7 @@ public class Main {
 		System.out.print("Password: ");
 		pass = Keyboard.in.readString();
 
-		createString = "select email, pwd from users where email ='"+user+"' and pwd ='"+pass+"'";
+		String createString = "select email, pwd from users where email ='"+user+"' and pwd ='"+pass+"'";
 
 		try
 		{
@@ -158,7 +152,7 @@ public class Main {
 
 		System.out.println("Thank you. Entering information into database... Please wait a moment.");
 
-		createString = "insert into users values ('"+email+"','"+name+"','"+city+"','"+gender[0]+"','"+pass+"')";
+		String createString = "insert into users values ('"+email+"','"+name+"','"+city+"','"+gender[0]+"','"+pass+"')";
 
 		try{
 			stmt.executeUpdate(createString);
