@@ -30,15 +30,9 @@ public class Main {
 		Class drvClass = Class.forName(m_driverName);
 		DriverManager.registerDriver((Driver)
 		drvClass.newInstance());
+		m_con = DriverManager.getConnection(m_url, m_userName, m_password);
 
-		} catch(Exception e)
-		{
-
-		System.err.print("ClassNotFoundException: ");
-		System.err.println(e.getMessage());
-
-		}
-
+		System.out.println();
 		System.out.println("Welcome! Please log in with your e-mail and password or choose the next option " +
 				"to register if you don't have an account yet. (Type the corresponding number for the option you want)");
 		
@@ -54,9 +48,9 @@ public class Main {
 			switch(input){
 			case 1:
 				if(login()){
-					//UserPage nUser = new UserPage();
-					//nUser.startUp();
 					System.out.println("Login successful... Please wait to be directed to the user screen.");
+					UserPage nUser = new UserPage(user);
+					nUser.startUp();
 				}
 				else
 					System.out.println("Username or password is wrong. Please try again.");
@@ -73,6 +67,8 @@ public class Main {
 			}
 			
 			if(menu){
+				System.out.println();
+				System.out.println("Main menu:");
 				System.out.println("1. Login (for registered users)");
 				System.out.println("2. Register");
 				System.out.println("3. Exit");
@@ -80,9 +76,20 @@ public class Main {
 			}
 			
 		}
-		
+
 		System.out.println("Goodbye!");
 		
+		} catch(Exception e)
+		{
+
+		System.err.print("ClassNotFoundException: ");
+		System.err.println(e.getMessage());
+
+		}
+		finally
+		{
+		m_con.close();
+		}
 	}
 	
 	public static boolean login(){
@@ -102,19 +109,15 @@ public class Main {
 		try
 		{
 
-		m_con = DriverManager.getConnection(m_url, m_userName, m_password);
-
 		stmt = m_con.createStatement();
 		ResultSet rs = stmt.executeQuery(createString);		
-		
-		SQLException x = new SQLException();
 		
 		if(!rs.next());
 		else
 			exists = true;
 		
+		rs.close();
 		stmt.close();
-		m_con.close();
 
 		} catch(SQLException ex) {
 
@@ -163,12 +166,10 @@ public class Main {
 		createString = "insert into users values ('"+email+"','"+name+"','"+city+"','"+gender[0]+"','"+pass+"')";
 		
 		try{
-			m_con = DriverManager.getConnection(m_url, m_userName, m_password);
 			stmt = m_con.createStatement();
 			stmt.executeUpdate(createString);
 			
 			stmt.close();
-			m_con.close();
 			
 			System.out.println("Congrats! You have created your account. You will now be directed to the login screen.");
 			Keyboard p = new Keyboard();
